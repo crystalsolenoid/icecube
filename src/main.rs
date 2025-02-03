@@ -3,7 +3,7 @@
 
 use error_iter::ErrorIter as _;
 use log::error;
-use pixels::{Error, Pixels, SurfaceTexture};
+use pixels::{wgpu::Color, Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::EventLoop;
@@ -41,6 +41,9 @@ fn main() -> Result<(), Error> {
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
         Pixels::new(WIDTH, HEIGHT, surface_texture)?
     };
+    let srgb = to_linear_rgb([0x48, 0xb2, 0xe8, 0xFF]);
+    pixels.clear_color(srgb);
+
     //let mut world = World::new();
     let quad_test = Quad {
         left: 30,
@@ -123,5 +126,29 @@ impl Quad {
 
             pixel.copy_from_slice(&rgba);
         }
+    }
+}
+
+/// sRGB to linear conversion.
+///
+/// For changing the color of the black bars from mismatched window/buffer dimensions a
+/// specified color that matches the color format Pixels expects when writing to the
+/// buffer.
+/// Implementation taken from https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_sRGB_decode.txt
+pub fn to_linear_rgb(c: [u8; 4]) -> Color {
+    let f = |xu: u8| -> f64 {
+        let x = xu as f64 / 255.0;
+        if x > 0.04045 {
+            ((x + 0.055) / 1.055).powf(2.4)
+        } else {
+            x / 12.92
+        }
+    };
+
+    Color {
+        r: f(c[0]),
+        g: f(c[1]),
+        b: f(c[2]),
+        a: 1.,
     }
 }
