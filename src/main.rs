@@ -3,7 +3,7 @@
 
 use error_iter::ErrorIter as _;
 use log::error;
-use pixels::{wgpu::Color, Error, Pixels, SurfaceTexture};
+use pixels::{wgpu, Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::EventLoop;
@@ -13,14 +13,6 @@ use winit_input_helper::WinitInputHelper;
 
 const WIDTH: u32 = 320;
 const HEIGHT: u32 = 240;
-
-/// Representation of the application state. In this example, a box will bounce around the screen.
-struct World {
-    box_x: i16,
-    box_y: i16,
-    velocity_x: i16,
-    velocity_y: i16,
-}
 
 fn main() -> Result<(), Error> {
     env_logger::init();
@@ -45,12 +37,29 @@ fn main() -> Result<(), Error> {
     pixels.clear_color(srgb);
 
     //let mut world = World::new();
-    let quad_test = Quad {
+    let template_quad = Quad {
         left: 30,
         top: 20,
-        width: 50,
-        height: 10,
+        width: 200,
+        height: 120,
+        style: QuadStyle {
+            fill_style: None,
+            border_style: Some(BorderStyle {
+                color: [200, 20, 20, 255],
+                thickness: 1,
+            }),
+        },
     };
+    let quad_tests = [
+        template_quad.clone(),
+        Quad {
+            left: 10,
+            top: 30,
+            width: 300,
+            height: 60,
+            ..template_quad
+        },
+    ];
 
     let res = event_loop.run(|event, elwt| {
         // Draw the current frame
@@ -60,7 +69,9 @@ fn main() -> Result<(), Error> {
         } = event
         {
             //world.draw(pixels.frame_mut());
-            quad_test.draw(pixels.frame_mut());
+            quad_tests
+                .iter()
+                .for_each(|quad| quad.draw(pixels.frame_mut()));
             if let Err(err) = pixels.render() {
                 log_error("pixels.render", err);
                 elwt.exit();
@@ -100,18 +111,35 @@ fn log_error<E: std::error::Error + 'static>(method_name: &str, err: E) {
     }
 }
 
+type Color = [u8; 4];
+
+#[derive(Clone)]
+struct QuadStyle {
+    fill_style: Option<Color>,
+    border_style: Option<BorderStyle>,
+}
+
+#[derive(Clone)]
+struct BorderStyle {
+    color: Color,
+    thickness: usize,
+}
+
+#[derive(Clone)]
 struct Quad {
     left: usize,
     top: usize,
     width: usize,
     height: usize,
+    style: QuadStyle,
 }
 
 impl Quad {
     fn draw(&self, frame: &mut [u8]) {
+        //TODO: Consider optimizing this if it is a bottleneck
         for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
-            let x = (i % WIDTH as usize);
-            let y = (i / WIDTH as usize);
+            let x = i % WIDTH as usize;
+            let y = i / WIDTH as usize;
 
             let inside_the_box = x >= self.left
                 && x < self.left + self.width
@@ -119,12 +147,28 @@ impl Quad {
                 && y < self.top + self.height;
 
             let rgba = if inside_the_box {
-                [0x5e, 0x48, 0xe8, 0xff]
+                match &self.style.border_style {
+                    Some(border_style) => {
+                        let border_thickness = border_style.thickness;
+                        if x < self.left + border_thickness
+                            || x >= self.left + self.width - border_thickness
+                            || y < self.top + border_thickness
+                            || y >= self.top + self.height - border_thickness
+                        {
+                            Some(border_style.color)
+                        } else {
+                            self.style.fill_style
+                        }
+                    }
+                    None => Some([0x5e, 0x48, 0xe8, 0xff]),
+                }
             } else {
-                [0x48, 0xb2, 0xe8, 0xff]
+                None
             };
 
-            pixel.copy_from_slice(&rgba);
+            if let Some(color) = rgba {
+                pixel.copy_from_slice(&color);
+            }
         }
     }
 }
@@ -135,7 +179,7 @@ impl Quad {
 /// specified color that matches the color format Pixels expects when writing to the
 /// buffer.
 /// Implementation taken from https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_sRGB_decode.txt
-pub fn to_linear_rgb(c: [u8; 4]) -> Color {
+pub fn to_linear_rgb(c: [u8; 4]) -> wgpu::Color {
     let f = |xu: u8| -> f64 {
         let x = xu as f64 / 255.0;
         if x > 0.04045 {
@@ -145,7 +189,7 @@ pub fn to_linear_rgb(c: [u8; 4]) -> Color {
         }
     };
 
-    Color {
+    wgpu::Color {
         r: f(c[0]),
         g: f(c[1]),
         b: f(c[2]),
