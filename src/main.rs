@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 
 use error_iter::ErrorIter as _;
+use icecube::palette::{Color, BLUE_DARK, MAIN_DARK, MAIN_LIGHT, RED_DARK};
 use log::error;
 use pixels::{wgpu, Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
@@ -33,7 +34,7 @@ fn main() -> Result<(), Error> {
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
         Pixels::new(WIDTH, HEIGHT, surface_texture)?
     };
-    let srgb = to_linear_rgb([0x48, 0xb2, 0xe8, 0xFF]);
+    let srgb = to_linear_rgb(MAIN_DARK);
     pixels.clear_color(srgb);
 
     //let mut world = World::new();
@@ -45,13 +46,22 @@ fn main() -> Result<(), Error> {
         style: QuadStyle {
             fill_style: None,
             border_style: Some(BorderStyle {
-                color: [200, 20, 20, 255],
+                color: BLUE_DARK,
                 thickness: 1,
             }),
         },
     };
     let quad_tests = [
-        template_quad.clone(),
+        Quad {
+            style: QuadStyle {
+                fill_style: Some(MAIN_LIGHT),
+                border_style: Some(BorderStyle {
+                    color: RED_DARK,
+                    thickness: 5,
+                }),
+            },
+            ..template_quad
+        },
         Quad {
             left: 10,
             top: 30,
@@ -111,8 +121,6 @@ fn log_error<E: std::error::Error + 'static>(method_name: &str, err: E) {
     }
 }
 
-type Color = [u8; 4];
-
 #[derive(Clone)]
 struct QuadStyle {
     fill_style: Option<Color>,
@@ -160,7 +168,7 @@ impl Quad {
                             self.style.fill_style
                         }
                     }
-                    None => Some([0x5e, 0x48, 0xe8, 0xff]),
+                    None => self.style.fill_style,
                 }
             } else {
                 None
