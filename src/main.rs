@@ -2,7 +2,7 @@
 #![forbid(unsafe_code)]
 
 use error_iter::ErrorIter as _;
-use icecube::palette::{Color, BLUE_DARK, MAIN_DARK, MAIN_LIGHT, RED_DARK};
+use icecube::palette::{Color, BLUE_DARK, BLUE_LIGHT, MAIN_DARK, MAIN_LIGHT, RED_DARK};
 use log::error;
 use pixels::{wgpu, Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
@@ -44,10 +44,10 @@ fn main() -> Result<(), Error> {
         width: 200,
         height: 120,
         style: QuadStyle {
-            fill_style: None,
+            fill_style: Some(BLUE_LIGHT),
             border_style: Some(BorderStyle {
                 color: BLUE_DARK,
-                thickness: 1,
+                thickness: 2,
             }),
         },
     };
