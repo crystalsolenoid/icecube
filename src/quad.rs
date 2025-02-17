@@ -1,6 +1,10 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
+/*
+* our_quad.fill(red).border_color(blue)
+*/
+
 use crate::palette::Color;
 
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
