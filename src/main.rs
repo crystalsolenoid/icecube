@@ -12,6 +12,9 @@ use winit::keyboard::KeyCode;
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 
+use icecube::quad::{BorderStyle, Quad, QuadStyle};
+use icecube::tree::Node;
+
 const WIDTH: u32 = 320;
 const HEIGHT: u32 = 240;
 
@@ -38,10 +41,11 @@ fn main() -> Result<(), Error> {
     pixels.clear_color(srgb);
 
     //let mut world = World::new();
+    let mut root = Node::root_node(WIDTH as usize, HEIGHT as usize); // TODO figure out how we want to
+                                                                     // handle coordinate types everywhere
+
     let template_quad = Quad {
-        left: 30,
-        top: 20,
-        width: 200,
+        width: 100,
         height: 120,
         style: QuadStyle {
             fill_style: Some(BLUE_LIGHT),
@@ -51,25 +55,23 @@ fn main() -> Result<(), Error> {
             }),
         },
     };
-    let quad_tests = [
+
+    let a = Node::new(template_quad.clone(), (10, 10));
+    let mut b = Node::new(template_quad.clone(), (150, 50));
+    let c = Node::new(
         Quad {
-            style: QuadStyle {
-                fill_style: Some(MAIN_LIGHT),
-                border_style: Some(BorderStyle {
-                    color: RED_DARK,
-                    thickness: 5,
-                }),
-            },
-            ..template_quad
+            width: 20,
+            height: 100,
+            ..template_quad.clone()
         },
-        Quad {
-            left: 10,
-            top: 30,
-            width: 300,
-            height: 60,
-            ..template_quad
-        },
-    ];
+        (10, 10),
+    );
+    let d = Node::new(c.element.clone(), (30, 15));
+
+    root.push(a);
+    b.push(c);
+    b.push(d);
+    root.push(b);
 
     let res = event_loop.run(|event, elwt| {
         // Draw the current frame
@@ -79,9 +81,7 @@ fn main() -> Result<(), Error> {
         } = event
         {
             //world.draw(pixels.frame_mut());
-            quad_tests
-                .iter()
-                .for_each(|quad| quad.draw(pixels.frame_mut()));
+            root.draw_recursive(pixels.frame_mut(), (0, 0));
             if let Err(err) = pixels.render() {
                 log_error("pixels.render", err);
                 elwt.exit();
@@ -118,66 +118,6 @@ fn log_error<E: std::error::Error + 'static>(method_name: &str, err: E) {
     error!("{method_name}() failed: {err}");
     for source in err.sources().skip(1) {
         error!("  Caused by: {source}");
-    }
-}
-
-#[derive(Clone)]
-struct QuadStyle {
-    fill_style: Option<Color>,
-    border_style: Option<BorderStyle>,
-}
-
-#[derive(Clone)]
-struct BorderStyle {
-    color: Color,
-    thickness: usize,
-}
-
-#[derive(Clone)]
-struct Quad {
-    left: usize,
-    top: usize,
-    width: usize,
-    height: usize,
-    style: QuadStyle,
-}
-
-impl Quad {
-    fn draw(&self, frame: &mut [u8]) {
-        //TODO: Consider optimizing this if it is a bottleneck
-        for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
-            let x = i % WIDTH as usize;
-            let y = i / WIDTH as usize;
-
-            let inside_the_box = x >= self.left
-                && x < self.left + self.width
-                && y >= self.top
-                && y < self.top + self.height;
-
-            let rgba = if inside_the_box {
-                match &self.style.border_style {
-                    Some(border_style) => {
-                        let border_thickness = border_style.thickness;
-                        if x < self.left + border_thickness
-                            || x >= self.left + self.width - border_thickness
-                            || y < self.top + border_thickness
-                            || y >= self.top + self.height - border_thickness
-                        {
-                            Some(border_style.color)
-                        } else {
-                            self.style.fill_style
-                        }
-                    }
-                    None => self.style.fill_style,
-                }
-            } else {
-                None
-            };
-
-            if let Some(color) = rgba {
-                pixel.copy_from_slice(&color);
-            }
-        }
     }
 }
 
