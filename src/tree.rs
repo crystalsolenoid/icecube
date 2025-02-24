@@ -1,10 +1,13 @@
-use crate::quad::{BorderStyle, Quad, QuadStyle};
+use crate::{
+    element::Element,
+    quad::{BorderStyle, Quad, QuadStyle},
+};
 
 #[derive(Clone)]
 pub struct Node {
     pub children: Vec<Node>,
     pub relative_position: (u32, u32),
-    pub element: Quad,
+    pub element: Element,
     pub layout: Layout,
 }
 
@@ -16,7 +19,7 @@ pub enum Layout {
 
 impl Node {
     pub fn root_node(width: usize, height: usize) -> Self {
-        let window = Quad {
+        let window = Element::Quad(Quad {
             width,
             height,
             style: QuadStyle {
@@ -26,11 +29,11 @@ impl Node {
                     thickness: 1,
                 }),
             },
-        };
+        });
         Self::new(window, (0, 0), Layout::Row)
     }
 
-    pub fn new(element: Quad, relative_position: (u32, u32), layout: Layout) -> Self {
+    pub fn new(element: Element, relative_position: (u32, u32), layout: Layout) -> Self {
         Self {
             children: vec![],
             relative_position,
@@ -55,10 +58,10 @@ impl Node {
                 let start_position = *child_position;
                 match self.layout {
                     Layout::Row => {
-                        child_position.0 += child_node.element.width as u32;
+                        child_position.0 += child_node.element.width();
                     }
                     Layout::Column => {
-                        child_position.1 += child_node.element.height as u32;
+                        child_position.1 += child_node.element.height();
                     }
                 }
                 //TODO: check if drawing off the screen and warn if so

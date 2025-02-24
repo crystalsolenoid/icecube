@@ -2,7 +2,9 @@
 #![forbid(unsafe_code)]
 
 use error_iter::ErrorIter as _;
+use icecube::element::Element;
 use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_DARK, MAIN_LIGHT, RED_DARK, RED_LIGHT};
+use icecube::text::Text;
 use log::error;
 use pixels::{wgpu, Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
@@ -45,9 +47,9 @@ fn main() -> Result<(), Error> {
 
     // handle coordinate types everywhere
     let panel_style = QuadStyle {
-        fill_style: Some(MAIN_LIGHT),
+        fill_style: Some(MAIN_DARK),
         border_style: Some(BorderStyle {
-            color: MAIN_DARK,
+            color: BLUE_DARK,
             thickness: 5,
         }),
     };
@@ -55,53 +57,52 @@ fn main() -> Result<(), Error> {
         fill_style: Some(MAIN_LIGHT),
         border_style: Some(BorderStyle {
             color: MAIN_DARK,
-            thickness: 5,
-        }),
-    };
-    let widget_style_blue = QuadStyle {
-        fill_style: Some(MAIN_LIGHT),
-        border_style: Some(BorderStyle {
-            color: MAIN_DARK,
-            thickness: 3,
+            thickness: 0,
         }),
     };
     let widget_style_red = QuadStyle {
-        fill_style: Some(MAIN_LIGHT),
+        fill_style: Some(MAIN_DARK),
         border_style: Some(BorderStyle {
-            color: MAIN_DARK,
+            color: RED_DARK,
             thickness: 3,
         }),
     };
 
     let mut panel = Node::new(
-        Quad {
-            width: 200,
+        Element::Quad(Quad {
+            width: 100,
             height: HEIGHT as usize,
             style: panel_style,
-        },
+        }),
         (10, 10),
         Layout::Column,
     );
-    let viewport = Node::new(
-        Quad {
-            width: WIDTH as usize - 200,
+    let mut viewport = Node::new(
+        Element::Quad(Quad {
+            width: WIDTH as usize - 100,
             height: HEIGHT as usize,
             style: viewport_style,
-        },
+        }),
         (10, 10),
         Layout::Row,
     );
+
     let widget_1 = Node::new(
-        Quad {
-            width: 200,
+        Element::Quad(Quad {
+            width: 100,
             height: 40,
             style: widget_style_red,
-        },
+        }),
         (0, 0),
         Layout::Row,
     );
-    let mut widget_2 = widget_1.clone();
-    widget_2.element.style = widget_style_blue;
+    let widget_2 = Node::new(
+        Element::Text(Text {
+            content: " hello world".into(),
+        }),
+        (0, 0),
+        Layout::Row,
+    );
 
     panel.push(widget_1.clone());
     panel.push(widget_2.clone());
@@ -110,6 +111,14 @@ fn main() -> Result<(), Error> {
     panel.push(widget_1.clone());
     panel.push(widget_2.clone());
 
+    let text_test = Node::new(
+        Element::Text(Text {
+            content: "Icecube can render text!!".into(),
+        }),
+        (0, 0),
+        Layout::Row,
+    );
+    viewport.push(text_test);
     root.push(panel);
     root.push(viewport);
 
