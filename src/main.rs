@@ -2,7 +2,7 @@
 #![forbid(unsafe_code)]
 
 use error_iter::ErrorIter as _;
-use icecube::palette::{Color, BLUE_DARK, BLUE_LIGHT, MAIN_DARK, MAIN_LIGHT, RED_DARK};
+use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_DARK, MAIN_LIGHT, RED_DARK, RED_LIGHT};
 use log::error;
 use pixels::{wgpu, Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
@@ -13,7 +13,7 @@ use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 
 use icecube::quad::{BorderStyle, Quad, QuadStyle};
-use icecube::tree::Node;
+use icecube::tree::{Layout, Node};
 
 const WIDTH: u32 = 320;
 const HEIGHT: u32 = 240;
@@ -42,36 +42,76 @@ fn main() -> Result<(), Error> {
 
     //let mut world = World::new();
     let mut root = Node::root_node(WIDTH as usize, HEIGHT as usize); // TODO figure out how we want to
-                                                                     // handle coordinate types everywhere
 
-    let template_quad = Quad {
-        width: 100,
-        height: 120,
-        style: QuadStyle {
-            fill_style: Some(BLUE_LIGHT),
-            border_style: Some(BorderStyle {
-                color: BLUE_DARK,
-                thickness: 2,
-            }),
-        },
+    // handle coordinate types everywhere
+    let panel_style = QuadStyle {
+        fill_style: Some(MAIN_LIGHT),
+        border_style: Some(BorderStyle {
+            color: MAIN_DARK,
+            thickness: 5,
+        }),
+    };
+    let viewport_style = QuadStyle {
+        fill_style: Some(MAIN_LIGHT),
+        border_style: Some(BorderStyle {
+            color: MAIN_DARK,
+            thickness: 5,
+        }),
+    };
+    let widget_style_blue = QuadStyle {
+        fill_style: Some(MAIN_LIGHT),
+        border_style: Some(BorderStyle {
+            color: MAIN_DARK,
+            thickness: 3,
+        }),
+    };
+    let widget_style_red = QuadStyle {
+        fill_style: Some(MAIN_LIGHT),
+        border_style: Some(BorderStyle {
+            color: MAIN_DARK,
+            thickness: 3,
+        }),
     };
 
-    let a = Node::new(template_quad.clone(), (10, 10));
-    let mut b = Node::new(template_quad.clone(), (150, 50));
-    let c = Node::new(
+    let mut panel = Node::new(
         Quad {
-            width: 20,
-            height: 100,
-            ..template_quad.clone()
+            width: 200,
+            height: HEIGHT as usize,
+            style: panel_style,
         },
         (10, 10),
+        Layout::Column,
     );
-    let d = Node::new(c.element.clone(), (30, 15));
+    let viewport = Node::new(
+        Quad {
+            width: WIDTH as usize - 200,
+            height: HEIGHT as usize,
+            style: viewport_style,
+        },
+        (10, 10),
+        Layout::Row,
+    );
+    let widget_1 = Node::new(
+        Quad {
+            width: 200,
+            height: 40,
+            style: widget_style_red,
+        },
+        (0, 0),
+        Layout::Row,
+    );
+    let mut widget_2 = widget_1.clone();
+    widget_2.element.style = widget_style_blue;
 
-    root.push(a);
-    b.push(c);
-    b.push(d);
-    root.push(b);
+    panel.push(widget_1.clone());
+    panel.push(widget_2.clone());
+    panel.push(widget_1.clone());
+    panel.push(widget_2.clone());
+    panel.push(widget_1.clone());
+    panel.push(widget_2.clone());
+
+    root.push(panel);
+    root.push(viewport);
 
     let res = event_loop.run(|event, elwt| {
         // Draw the current frame
