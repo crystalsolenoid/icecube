@@ -10,13 +10,13 @@ use crate::palette::Color;
 
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct QuadStyle {
     pub fill_style: Option<Color>,
     pub border_style: Option<BorderStyle>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct BorderStyle {
     pub color: Color,
     pub thickness: usize,
@@ -27,6 +27,51 @@ pub struct Quad {
     pub width: usize,
     pub height: usize,
     pub style: QuadStyle,
+}
+
+impl Quad {
+    pub fn new(width: u32, height: u32) -> Self {
+        Self {
+            width: width as usize,
+            height: height as usize,
+            style: QuadStyle::default(),
+        }
+    }
+
+    pub fn fill(mut self, color: Color) -> Self {
+        self.style.fill_style = Some(color);
+        self
+    }
+
+    pub fn border_color(mut self, color: Color) -> Self {
+        match self.style.border_style {
+            Some(ref mut style) => {
+                style.color = color;
+            }
+            None => {
+                self.style.border_style = Some(BorderStyle {
+                    color,
+                    ..BorderStyle::default()
+                });
+            }
+        };
+        self
+    }
+
+    pub fn border_thickness(mut self, thickness: usize) -> Self {
+        match self.style.border_style {
+            Some(ref mut style) => {
+                style.thickness = thickness;
+            }
+            None => {
+                self.style.border_style = Some(BorderStyle {
+                    thickness,
+                    ..BorderStyle::default()
+                });
+            }
+        };
+        self
+    }
 }
 
 impl Element for Quad {

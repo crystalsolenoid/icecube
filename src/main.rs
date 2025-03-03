@@ -85,11 +85,18 @@ fn main() -> Result<(), Error> {
         Layout::Row,
     );
 
-    let quad_1 = Quad {
-        width: 100,
-        height: 40,
-        style: widget_style_red,
-    };
+    /*
+        let quad_1 = Quad {
+            width: 100,
+            height: 40,
+            style: widget_style_red,
+        };
+    */
+    let quad_1 = Quad::new(100, 40)
+        .fill(RED_DARK)
+        .border_thickness(3)
+        .border_color(BLUE_LIGHT);
+
     let widget_1 = Node::new(quad_1.clone(), Layout::Row);
     let widget_3 = Node::new(quad_1.clone(), Layout::Row);
     let widget_4 = Node::new(quad_1.clone(), Layout::Row);
