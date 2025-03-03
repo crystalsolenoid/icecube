@@ -1,3 +1,4 @@
+use crate::element::Element;
 use crate::palette::BLUE_LIGHT;
 
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
@@ -7,16 +8,15 @@ pub struct Text {
     pub content: String,
 }
 
-impl Text {
-    pub fn width(&self) -> u32 {
+impl Element for Text {
+    fn width(&self) -> u32 {
         100
     }
-    pub fn height(&self) -> u32 {
+    fn height(&self) -> u32 {
         10
     }
-    pub fn draw(&self, frame: &mut [u8], position: (u32, u32)) {
+    fn draw(&self, frame: &mut [u8], position: (u32, u32)) {
         let font = include_bytes!("resources/test_font.png");
-        dbg!(font);
         let font = image::load_from_memory(font)
             .expect("failed to parse test font")
             .into_luma8();

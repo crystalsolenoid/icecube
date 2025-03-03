@@ -69,53 +69,52 @@ fn main() -> Result<(), Error> {
     };
 
     let mut panel = Node::new(
-        Element::Quad(Quad {
+        Quad {
             width: 100,
             height: HEIGHT as usize,
             style: panel_style,
-        }),
-        (10, 10),
+        },
         Layout::Column,
     );
     let mut viewport = Node::new(
-        Element::Quad(Quad {
+        Quad {
             width: WIDTH as usize - 100,
             height: HEIGHT as usize,
             style: viewport_style,
-        }),
-        (10, 10),
+        },
         Layout::Row,
     );
 
-    let widget_1 = Node::new(
-        Element::Quad(Quad {
-            width: 100,
-            height: 40,
-            style: widget_style_red,
-        }),
-        (0, 0),
-        Layout::Row,
-    );
-    let widget_2 = Node::new(
-        Element::Text(Text {
-            content: " hello world".into(),
-        }),
-        (0, 0),
-        Layout::Row,
-    );
+    let quad_1 = Quad {
+        width: 100,
+        height: 40,
+        style: widget_style_red,
+    };
+    let widget_1 = Node::new(quad_1.clone(), Layout::Row);
+    let widget_3 = Node::new(quad_1.clone(), Layout::Row);
+    let widget_4 = Node::new(quad_1.clone(), Layout::Row);
+    // let widget_1 = Node::new()
+    // .size(100, 40)
+    // .fill(MAIN_DARK).border_color(RED_DARK).border_thickness(3);
 
-    panel.push(widget_1.clone());
-    panel.push(widget_2.clone());
-    panel.push(widget_1.clone());
-    panel.push(widget_2.clone());
-    panel.push(widget_1.clone());
-    panel.push(widget_2.clone());
+    let text_1 = Text {
+        content: " hello world".into(),
+    };
+    let widget_2 = Node::new(text_1.clone(), Layout::Row);
+    let widget_5 = Node::new(text_1.clone(), Layout::Row);
+
+    panel.push(widget_1);
+    panel.push(widget_2);
+    panel.push(widget_4);
+    panel.push(widget_5);
+    panel.push(widget_3);
+    //
+    //  panel.push(widget_2.clone());
 
     let text_test = Node::new(
-        Element::Text(Text {
+        Text {
             content: "Icecube can render text!!".into(),
-        }),
-        (0, 0),
+        },
         Layout::Row,
     );
     viewport.push(text_test);

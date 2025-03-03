@@ -3,11 +3,9 @@ use crate::{
     quad::{BorderStyle, Quad, QuadStyle},
 };
 
-#[derive(Clone)]
 pub struct Node {
     pub children: Vec<Node>,
-    pub relative_position: (u32, u32),
-    pub element: Element,
+    pub element: Box<dyn Element>,
     pub layout: Layout,
 }
 
@@ -19,7 +17,7 @@ pub enum Layout {
 
 impl Node {
     pub fn root_node(width: usize, height: usize) -> Self {
-        let window = Element::Quad(Quad {
+        let window = Quad {
             width,
             height,
             style: QuadStyle {
@@ -29,26 +27,24 @@ impl Node {
                     thickness: 1,
                 }),
             },
-        });
-        Self::new(window, (0, 0), Layout::Row)
+        };
+        Self::new(window, Layout::Row)
     }
 
-    pub fn new(element: Element, relative_position: (u32, u32), layout: Layout) -> Self {
+    pub fn new(element: impl Element + 'static, layout: Layout) -> Self {
         Self {
             children: vec![],
-            relative_position,
-            element,
+            element: Box::new(element),
             layout,
         }
     }
 
-    pub fn push(&mut self, child: Node) {
+    pub fn push(&mut self, child: Self) {
         self.children.push(child);
     }
 
     pub fn draw_recursive(&self, frame: &mut [u8], accum_position: (u32, u32)) {
         let new_position = accum_position;
-        dbg!(&new_position);
         self.element.draw(frame, new_position);
 
         let positions = self
@@ -70,6 +66,6 @@ impl Node {
         self.children
             .iter()
             .zip(positions)
-            .for_each(|(node, position)| node.draw_recursive(frame, dbg!(position)));
+            .for_each(|(node, position)| node.draw_recursive(frame, position));
     }
 }

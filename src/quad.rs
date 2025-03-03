@@ -5,6 +5,7 @@
 * our_quad.fill(red).border_color(blue)
 */
 
+use crate::element::Element;
 use crate::palette::Color;
 
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
@@ -28,8 +29,8 @@ pub struct Quad {
     pub style: QuadStyle,
 }
 
-impl Quad {
-    pub fn draw(&self, frame: &mut [u8], position: (u32, u32)) {
+impl Element for Quad {
+    fn draw(&self, frame: &mut [u8], position: (u32, u32)) {
         let position = (position.0 as usize, position.1 as usize); // TODO fix types mess
                                                                    //TODO: Consider optimizing this if it is a bottleneck
         for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
@@ -65,5 +66,11 @@ impl Quad {
                 pixel.copy_from_slice(&color);
             }
         }
+    }
+    fn width(&self) -> u32 {
+        self.width as u32
+    }
+    fn height(&self) -> u32 {
+        self.height as u32
     }
 }
