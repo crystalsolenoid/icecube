@@ -64,4 +64,13 @@ impl Node {
             .zip(positions)
             .for_each(|(node, position)| node.draw_recursive(frame, position));
     }
+
+    pub fn on_click(&self, position: (u32, u32)) {
+        dbg!(position);
+        self.children
+            .iter()
+            //TODO: pass position relative to child
+            .for_each(|child| child.on_click(position));
+        self.element.on_click(position);
+    }
 }

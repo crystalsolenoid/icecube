@@ -28,4 +28,7 @@ impl Element for Button {
     fn padding(&self) -> crate::element::Padding {
         self.quad.padding()
     }
+    fn on_click(&self, _position: (u32, u32)) {
+        println!("{}", self.text.content)
+    }
 }

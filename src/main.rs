@@ -9,7 +9,7 @@ use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_DARK, MAIN_LIGHT, RED_DARK, R
 use icecube::text::Text;
 use log::error;
 use pixels::{wgpu, Error, Pixels, SurfaceTexture};
-use winit::dpi::LogicalSize;
+use winit::dpi::{LogicalSize, PhysicalPosition};
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::EventLoop;
 use winit::keyboard::KeyCode;
@@ -112,6 +112,8 @@ fn main() -> Result<(), Error> {
     root.push(panel);
     root.push(viewport);
 
+    let mut mouse_position: Result<(usize, usize), (isize, isize)> = Err((0, 0));
+
     let res = event_loop.run(|event, elwt| {
         // Draw the current frame
         if let Event::WindowEvent {
@@ -128,6 +130,19 @@ fn main() -> Result<(), Error> {
             }
         }
 
+        if let Event::WindowEvent {
+            event:
+                WindowEvent::CursorMoved {
+                    device_id: _,
+                    position,
+                },
+            ..
+        } = event
+        {
+            // Convert it to a pixel location
+            mouse_position = pixels.window_pos_to_pixel(position.into());
+        }
+
         // Handle input events
         if input.update(&event) {
             // Close events
@@ -142,6 +157,13 @@ fn main() -> Result<(), Error> {
                     log_error("pixels.resize_surface", err);
                     elwt.exit();
                     return;
+                }
+            }
+
+            if input.mouse_released(0) {
+                dbg!(&mouse_position);
+                if let Ok((x, y)) = mouse_position {
+                    root.on_click((x as u32, y as u32));
                 }
             }
 
