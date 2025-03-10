@@ -1,6 +1,6 @@
 use crate::{
-    element::{Element, Padding},
-    quad::{BorderStyle, Quad, QuadStyle},
+    element::Element,
+    quad::{Quad, QuadStyle},
 };
 
 pub struct Node {
@@ -17,18 +17,10 @@ pub enum Layout {
 
 impl Node {
     pub fn root_node(width: usize, height: usize) -> Self {
-        let window = Quad {
-            width,
-            height,
-            padding: Padding::default(),
-            style: QuadStyle {
-                fill_style: None, // TODO should this be setting the background?
-                border_style: Some(BorderStyle {
-                    color: [0x15, 0x78, 0x8c, 0xff],
-                    thickness: 1,
-                }),
-            },
-        };
+        let window = Quad::new(width as u32, height as u32).style(QuadStyle {
+            fill_style: None, // TODO should this be setting the background?
+            border_style: None,
+        });
         Self::new(window, Layout::Row)
     }
 
