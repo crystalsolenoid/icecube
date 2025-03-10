@@ -1,8 +1,9 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
+#![allow(unused_imports)]
 
 use error_iter::ErrorIter as _;
-use icecube::element::Element;
+
 use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_DARK, MAIN_LIGHT, RED_DARK, RED_LIGHT};
 use icecube::text::Text;
 use log::error;
@@ -60,38 +61,15 @@ fn main() -> Result<(), Error> {
             thickness: 0,
         }),
     };
-    let widget_style_red = QuadStyle {
-        fill_style: Some(MAIN_DARK),
-        border_style: Some(BorderStyle {
-            color: RED_DARK,
-            thickness: 3,
-        }),
-    };
 
-    let mut panel = Node::new(
-        Quad {
-            width: 100,
-            height: HEIGHT as usize,
-            style: panel_style,
-        },
-        Layout::Column,
-    );
+    let mut panel = Node::new(Quad::new(100, HEIGHT).style(panel_style), Layout::Column);
     let mut viewport = Node::new(
-        Quad {
-            width: WIDTH as usize - 100,
-            height: HEIGHT as usize,
-            style: viewport_style,
-        },
+        Quad::new(WIDTH - 100, HEIGHT)
+            .style(viewport_style)
+            .padding([5, 10].into()),
         Layout::Row,
     );
 
-    /*
-        let quad_1 = Quad {
-            width: 100,
-            height: 40,
-            style: widget_style_red,
-        };
-    */
     let quad_1 = Quad::new(100, 40)
         .fill(RED_DARK)
         .border_thickness(3)
@@ -100,9 +78,6 @@ fn main() -> Result<(), Error> {
     let widget_1 = Node::new(quad_1.clone(), Layout::Row);
     let widget_3 = Node::new(quad_1.clone(), Layout::Row);
     let widget_4 = Node::new(quad_1.clone(), Layout::Row);
-    // let widget_1 = Node::new()
-    // .size(100, 40)
-    // .fill(MAIN_DARK).border_color(RED_DARK).border_thickness(3);
 
     let text_1 = Text {
         content: " hello world".into(),
@@ -115,8 +90,6 @@ fn main() -> Result<(), Error> {
     panel.push(widget_4);
     panel.push(widget_5);
     panel.push(widget_3);
-    //
-    //  panel.push(widget_2.clone());
 
     let text_test = Node::new(
         Text {

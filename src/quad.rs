@@ -5,7 +5,7 @@
 * our_quad.fill(red).border_color(blue)
 */
 
-use crate::element::Element;
+use crate::element::{Element, Padding};
 use crate::palette::Color;
 
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
@@ -26,6 +26,7 @@ pub struct BorderStyle {
 pub struct Quad {
     pub width: usize,
     pub height: usize,
+    pub padding: Padding,
     pub style: QuadStyle,
 }
 
@@ -34,12 +35,22 @@ impl Quad {
         Self {
             width: width as usize,
             height: height as usize,
+            padding: Padding::default(),
             style: QuadStyle::default(),
         }
     }
 
     pub fn fill(mut self, color: Color) -> Self {
         self.style.fill_style = Some(color);
+        self
+    }
+
+    pub fn style(mut self, style: QuadStyle) -> Self {
+        self.style = style;
+        self
+    }
+    pub fn padding(mut self, padding: Padding) -> Self {
+        self.padding = padding;
         self
     }
 
@@ -117,5 +128,8 @@ impl Element for Quad {
     }
     fn height(&self) -> u32 {
         self.height as u32
+    }
+    fn padding(&self) -> Padding {
+        self.padding
     }
 }

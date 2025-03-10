@@ -1,5 +1,5 @@
 use crate::{
-    element::Element,
+    element::{Element, Padding},
     quad::{BorderStyle, Quad, QuadStyle},
 };
 
@@ -20,6 +20,7 @@ impl Node {
         let window = Quad {
             width,
             height,
+            padding: Padding::default(),
             style: QuadStyle {
                 fill_style: None, // TODO should this be setting the background?
                 border_style: Some(BorderStyle {
@@ -44,8 +45,11 @@ impl Node {
     }
 
     pub fn draw_recursive(&self, frame: &mut [u8], accum_position: (u32, u32)) {
-        let new_position = accum_position;
-        self.element.draw(frame, new_position);
+        self.element.draw(frame, accum_position);
+        let new_position = (
+            accum_position.0 + self.element.padding().left,
+            accum_position.1 + self.element.padding().top,
+        );
 
         let positions = self
             .children

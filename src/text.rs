@@ -1,4 +1,4 @@
-use crate::element::Element;
+use crate::element::{Element, Padding};
 use crate::palette::BLUE_LIGHT;
 
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
@@ -50,5 +50,8 @@ impl Element for Text {
                     }
                 }
             });
+    }
+    fn padding(&self) -> Padding {
+        Padding::default()
     }
 }
