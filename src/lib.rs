@@ -1,3 +1,4 @@
+pub mod button;
 pub mod element;
 pub mod palette;
 pub mod quad;

@@ -4,6 +4,7 @@
 
 use error_iter::ErrorIter as _;
 
+use icecube::button::Button;
 use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_DARK, MAIN_LIGHT, RED_DARK, RED_LIGHT};
 use icecube::text::Text;
 use log::error;
@@ -66,11 +67,11 @@ fn main() -> Result<(), Error> {
     let mut viewport = Node::new(
         Quad::new(WIDTH - 100, HEIGHT)
             .style(viewport_style)
-            .padding([5, 10].into()),
-        Layout::Row,
+            .with_padding([5, 10].into()),
+        Layout::Column,
     );
 
-    let quad_1 = Quad::new(100, 40)
+    let quad_1 = Quad::new(90, 40)
         .fill(RED_DARK)
         .border_thickness(3)
         .border_color(BLUE_LIGHT);
@@ -98,6 +99,16 @@ fn main() -> Result<(), Error> {
         Layout::Row,
     );
     viewport.push(text_test);
+    viewport.push(Node::new(
+        Button {
+            text: Text {
+                content: "Click Me!".into(),
+            },
+            quad: quad_1.fill(MAIN_DARK).with_padding([0, 0].into()),
+        },
+        Layout::Row,
+    ));
+
     root.push(panel);
     root.push(viewport);
 
