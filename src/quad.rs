@@ -16,17 +16,17 @@ pub struct QuadStyle {
     pub border_style: Option<BorderStyle>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Copy, Default)]
 pub struct BorderStyle {
     pub color: Color,
-    pub thickness: usize,
+    pub thickness: u32,
 }
 
 #[derive(Clone)]
 pub struct Quad {
     pub width: usize,
     pub height: usize,
-    pub padding: Padding,
+    padding: Padding,
     pub style: QuadStyle,
 }
 
@@ -49,7 +49,7 @@ impl Quad {
         self.style = style;
         self
     }
-    pub fn padding(mut self, padding: Padding) -> Self {
+    pub fn with_padding(mut self, padding: Padding) -> Self {
         self.padding = padding;
         self
     }
@@ -69,7 +69,7 @@ impl Quad {
         self
     }
 
-    pub fn border_thickness(mut self, thickness: usize) -> Self {
+    pub fn border_thickness(mut self, thickness: u32) -> Self {
         match self.style.border_style {
             Some(ref mut style) => {
                 style.thickness = thickness;
@@ -102,10 +102,10 @@ impl Element for Quad {
                 match &self.style.border_style {
                     Some(border_style) => {
                         let border_thickness = border_style.thickness;
-                        if x < position.0 + border_thickness
-                            || x >= position.0 + self.width - border_thickness
-                            || y < position.1 + border_thickness
-                            || y >= position.1 + self.height - border_thickness
+                        if x < position.0 + border_thickness as usize
+                            || x >= position.0 + self.width - border_thickness as usize
+                            || y < position.1 + border_thickness as usize
+                            || y >= position.1 + self.height - border_thickness as usize
                         {
                             Some(border_style.color)
                         } else {
@@ -130,6 +130,19 @@ impl Element for Quad {
         self.height as u32
     }
     fn padding(&self) -> Padding {
-        self.padding
+        let width = self.style.border_style.unwrap_or_default().thickness;
+
+        let Padding {
+            top,
+            right,
+            bottom,
+            left,
+        } = self.padding;
+        Padding {
+            top: top + width,
+            right: right + width,
+            bottom: bottom + width,
+            left: left + width,
+        }
     }
 }
