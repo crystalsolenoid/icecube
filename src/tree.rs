@@ -1,5 +1,6 @@
 use crate::{
     element::Element,
+    layout::LayoutEngineResult,
     quad::{Quad, QuadStyle},
 };
 
@@ -7,6 +8,7 @@ pub struct Node {
     pub children: Vec<Node>,
     pub element: Box<dyn Element>,
     pub layout: Layout,
+    pub layout_calc: LayoutEngineResult,
 }
 
 #[derive(Clone)]
@@ -21,14 +23,23 @@ impl Node {
             fill_style: None, // TODO should this be setting the background?
             border_style: None,
         });
-        Self::new(window, Layout::Row)
+        Self::new(
+            window,
+            Layout::Row,
+            LayoutEngineResult::test(0, 0, width as u32, height as u32),
+        )
     }
 
-    pub fn new(element: impl Element + 'static, layout: Layout) -> Self {
+    pub fn new(
+        element: impl Element + 'static,
+        layout: Layout,
+        layout_calc: LayoutEngineResult,
+    ) -> Self {
         Self {
             children: vec![],
             element: Box::new(element),
             layout,
+            layout_calc,
         }
     }
 
@@ -36,6 +47,15 @@ impl Node {
         self.children.push(child);
     }
 
+    pub fn draw_recursive(&self, frame: &mut [u8], _accum_position: (u32, u32)) {
+        let LayoutEngineResult { x, y, w, h } = self.layout_calc;
+        self.element.draw(frame, (x, y));
+        self.children
+            .iter()
+            .for_each(|node| node.draw_recursive(frame, (0, 0)));
+    }
+
+    /*
     pub fn draw_recursive(&self, frame: &mut [u8], accum_position: (u32, u32)) {
         self.element.draw(frame, accum_position);
         let new_position = (
@@ -64,11 +84,12 @@ impl Node {
             .zip(positions)
             .for_each(|(node, position)| node.draw_recursive(frame, position));
     }
+    */
 
     pub fn on_click(&self, position: (u32, u32)) {
-        dbg!(position);
         self.children
             .iter()
+            .filter(|child| child.layout_calc.contains(position))
             //TODO: pass position relative to child
             .for_each(|child| child.on_click(position));
         self.element.on_click(position);

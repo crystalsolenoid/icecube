@@ -16,6 +16,7 @@ use winit::keyboard::KeyCode;
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 
+use icecube::layout::LayoutEngineResult;
 use icecube::quad::{BorderStyle, Quad, QuadStyle};
 use icecube::tree::{Layout, Node};
 
@@ -63,12 +64,17 @@ fn main() -> Result<(), Error> {
         }),
     };
 
-    let mut panel = Node::new(Quad::new(100, HEIGHT).style(panel_style), Layout::Column);
+    let mut panel = Node::new(
+        Quad::new(100, HEIGHT).style(panel_style),
+        Layout::Column,
+        LayoutEngineResult::test(0, 0, 100, HEIGHT),
+    );
     let mut viewport = Node::new(
         Quad::new(WIDTH - 100, HEIGHT)
             .style(viewport_style)
             .with_padding([5, 10].into()),
         Layout::Column,
+        LayoutEngineResult::test(100, 0, WIDTH - 100, HEIGHT),
     );
 
     let quad_1 = Quad::new(90, 40)
@@ -76,20 +82,34 @@ fn main() -> Result<(), Error> {
         .border_thickness(3)
         .border_color(BLUE_LIGHT);
 
-    let widget_1 = Node::new(quad_1.clone(), Layout::Row);
-    let widget_3 = Node::new(quad_1.clone(), Layout::Row);
-    let widget_4 = Node::new(quad_1.clone(), Layout::Row);
+    let widget_1 = Node::new(
+        quad_1.clone(),
+        Layout::Row,
+        LayoutEngineResult::test(0, 0, 90, 40),
+    );
+    let widget_3 = Node::new(
+        quad_1.clone(),
+        Layout::Row,
+        LayoutEngineResult::test(0, 50, 90, 40),
+    );
+    let widget_4 = Node::new(
+        quad_1.clone(),
+        Layout::Row,
+        LayoutEngineResult::test(0, 100, 90, 40),
+    );
 
     let text_1 = Text {
         content: " hello world".into(),
     };
-    let widget_2 = Node::new(text_1.clone(), Layout::Row);
-    let widget_5 = Node::new(text_1.clone(), Layout::Row);
+    let widget_2 = Node::new(
+        text_1.clone(),
+        Layout::Row,
+        LayoutEngineResult::test(0, 150, 90, 40),
+    );
 
     panel.push(widget_1);
     panel.push(widget_2);
     panel.push(widget_4);
-    panel.push(widget_5);
     panel.push(widget_3);
 
     let text_test = Node::new(
@@ -97,6 +117,7 @@ fn main() -> Result<(), Error> {
             content: "Icecube can render text!!".into(),
         },
         Layout::Row,
+        LayoutEngineResult::test(100, 200, 90, 40),
     );
     viewport.push(text_test);
     viewport.push(Node::new(
@@ -107,6 +128,7 @@ fn main() -> Result<(), Error> {
             quad: quad_1.fill(MAIN_DARK).with_padding([0, 0].into()),
         },
         Layout::Row,
+        LayoutEngineResult::test(100, 100, 90, 40),
     ));
 
     root.push(panel);
@@ -161,7 +183,6 @@ fn main() -> Result<(), Error> {
             }
 
             if input.mouse_released(0) {
-                dbg!(&mouse_position);
                 if let Ok((x, y)) = mouse_position {
                     root.on_click((x as u32, y as u32));
                 }
