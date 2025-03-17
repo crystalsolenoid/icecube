@@ -5,7 +5,8 @@
 * our_quad.fill(red).border_color(blue)
 */
 
-use crate::element::{Element, Padding};
+use crate::element::Element;
+use crate::layout::Padding;
 use crate::palette::Color;
 
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer

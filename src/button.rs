@@ -1,4 +1,4 @@
-use crate::{element::Element, quad::Quad, text::Text};
+use crate::{element::Element, layout::Padding, quad::Quad, text::Text};
 
 pub struct Button {
     pub text: Text,
@@ -25,7 +25,7 @@ impl Element for Button {
         self.quad.height()
     }
 
-    fn padding(&self) -> crate::element::Padding {
+    fn padding(&self) -> Padding {
         self.quad.padding()
     }
     fn on_click(&self, _position: (u32, u32)) {
