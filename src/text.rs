@@ -1,5 +1,5 @@
 use crate::element::Element;
-use crate::layout::Padding;
+use crate::layout::{CalculatedLayout, Padding};
 use crate::palette::BLUE_LIGHT;
 
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
@@ -16,7 +16,7 @@ impl Element for Text {
     fn height(&self) -> u32 {
         10
     }
-    fn draw(&self, frame: &mut [u8], position: (u32, u32)) {
+    fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
         let font = include_bytes!("resources/test_font.png");
         let font = image::load_from_memory(font)
             .expect("failed to parse test font")
@@ -35,7 +35,7 @@ impl Element for Text {
             })
             .enumerate()
             .for_each(|(character_index, (x, y))| {
-                let (frame_x, frame_y) = position;
+                let (frame_x, frame_y) = (region.x, region.y);
 
                 for j in 0..=7 {
                     for i in 0..=5 {

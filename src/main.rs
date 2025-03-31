@@ -66,13 +66,13 @@ fn main() -> Result<(), Error> {
 
     let mut panel = Node::new(
         Quad::new(100, HEIGHT).style(panel_style),
-        CalculatedLayout::test(0, 0, 100, HEIGHT),
+        //CalculatedLayout::test(0, 0, 100, HEIGHT),
     );
     let mut viewport = Node::new(
         Quad::new(WIDTH - 100, HEIGHT)
             .style(viewport_style)
             .with_padding([5, 10].into()),
-        CalculatedLayout::test(100, 0, WIDTH - 100, HEIGHT),
+        //CalculatedLayout::test(100, 0, WIDTH - 100, HEIGHT),
     );
 
     let quad_1 = Quad::new(90, 40)
@@ -80,14 +80,23 @@ fn main() -> Result<(), Error> {
         .border_thickness(3)
         .border_color(BLUE_LIGHT);
 
-    let widget_1 = Node::new(quad_1.clone(), CalculatedLayout::test(0, 0, 90, 40));
-    let widget_3 = Node::new(quad_1.clone(), CalculatedLayout::test(0, 50, 90, 40));
-    let widget_4 = Node::new(quad_1.clone(), CalculatedLayout::test(0, 100, 90, 40));
+    let widget_1 = Node::new(
+        quad_1.clone(), //, CalculatedLayout::test(0, 0, 90, 40)
+    );
+    let widget_3 = Node::new(
+        quad_1.clone(), //, CalculatedLayout::test(0, 50, 90, 40)
+    );
+    let widget_4 = Node::new(
+        quad_1.clone(), //, CalculatedLayout::test(0, 100, 90, 40)
+    );
 
     let text_1 = Text {
-        content: " hello world".into(),
+        content: "hw".into(),
     };
-    let widget_2 = Node::new(text_1.clone(), CalculatedLayout::test(0, 150, 90, 40));
+    let widget_2 = Node::new(
+        text_1.clone(),
+        //CalculatedLayout::test(0, 150, 90, 40)
+    );
 
     panel.push(widget_1);
     panel.push(widget_2);
@@ -96,27 +105,29 @@ fn main() -> Result<(), Error> {
 
     let text_test = Node::new(
         Text {
-            content: "Icecube can render text!!".into(),
+            content: "I".into(),
         },
-        CalculatedLayout::test(100, 200, 90, 40),
+        //CalculatedLayout::test(100, 200, 90, 40),
     );
     viewport.push(text_test);
     viewport.push(Node::new(
         Button {
             text: Text {
-                content: "Click Me!".into(),
+                content: "C".into(),
             },
             quad: quad_1.fill(MAIN_DARK).with_padding([0, 0].into()),
         },
-        CalculatedLayout::test(100, 100, 90, 40),
+        //CalculatedLayout::test(100, 100, 90, 40),
     ));
 
     root.push(panel);
     root.push(viewport);
+    let root = root.calculate_layout();
 
     let mut mouse_position: Result<(usize, usize), (isize, isize)> = Err((0, 0));
 
     let res = event_loop.run(|event, elwt| {
+        // TODO: consider only calculating when necessary
         // Draw the current frame
         if let Event::WindowEvent {
             event: WindowEvent::RedrawRequested,
@@ -125,6 +136,7 @@ fn main() -> Result<(), Error> {
         {
             //world.draw(pixels.frame_mut());
             root.draw_recursive(pixels.frame_mut(), (0, 0));
+
             if let Err(err) = pixels.render() {
                 log_error("pixels.render", err);
                 elwt.exit();

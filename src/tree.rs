@@ -1,57 +1,44 @@
 use crate::{
     element::Element,
-    layout::{CalculatedLayout, LayoutParameters},
+    layout::{CalculatedLayout, Layout, Length},
     quad::{Quad, QuadStyle},
 };
 
-pub struct Node {
-    pub children: Vec<Node>,
+pub struct Node<LayoutStage> {
+    pub children: Vec<Node<LayoutStage>>,
     pub element: Box<dyn Element>,
-    pub layout: Option<CalculatedLayout>,
+    pub layout: LayoutStage, //Option<CalculatedLayout>,
 }
 
-impl Node {
+impl Node<Layout> {
     pub fn root_node(width: usize, height: usize) -> Self {
         let window = Quad::new(width as u32, height as u32).style(QuadStyle {
             fill_style: None, // TODO should this be setting the background?
             border_style: None,
         });
-        Self::new(
-            window,
-            CalculatedLayout::test(0, 0, width as u32, height as u32),
-        )
+        Self {
+            layout: Layout {
+                cross_length: width as u32,
+                flow_length: Length::Fixed(height as u32),
+                ..Layout::default()
+            },
+            ..Self::new(window)
+        }
     }
 
-    pub fn new(element: impl Element + 'static, layout: CalculatedLayout) -> Self {
+    pub fn new(element: impl Element + 'static) -> Self {
         Self {
             children: vec![],
             element: Box::new(element),
-            layout: Some(layout),
+            layout: Layout {
+                cross_length: 40,
+                ..Layout::default()
+            },
         }
     }
 
     pub fn push(&mut self, child: Self) {
         self.children.push(child);
-    }
-
-    pub fn get_layout(&mut self) -> CalculatedLayout {
-        // TODO this forces functions that use it to be mutating. How can we fix that?
-        match self.layout {
-            Some(layout) => layout,
-            None => {
-                self.calculate_layout();
-                self.layout.expect("calculate_layout should have set this")
-            }
-        }
-    }
-
-    pub fn draw_recursive(&mut self, frame: &mut [u8], _accum_position: (u32, u32)) {
-        // TODO can we remove mut from self?
-        let CalculatedLayout { x, y, w, h } = self.get_layout();
-        self.element.draw(frame, (x, y));
-        self.children
-            .iter_mut() // TODO mut bad
-            .for_each(|node| node.draw_recursive(frame, (0, 0)));
     }
 
     /*
@@ -84,16 +71,20 @@ impl Node {
             .for_each(|(node, position)| node.draw_recursive(frame, position));
     }
     */
+}
 
+impl Node<CalculatedLayout> {
+    pub fn draw_recursive(&self, frame: &mut [u8], _accum_position: (u32, u32)) {
+        // TODO can we remove mut from self?
+        self.element.draw(frame, self.layout);
+        self.children
+            .iter() // TODO mut bad
+            .for_each(|node| node.draw_recursive(frame, (0, 0)));
+    }
     pub fn on_click(&self, position: (u32, u32)) {
         self.children
             .iter()
-            .filter(|child| {
-                child
-                    .layout
-                    .expect("Layout should be calculated at this point.")
-                    .contains(position)
-            })
+            .filter(|child| child.layout.contains(position))
             //TODO: pass position relative to child
             .for_each(|child| child.on_click(position));
         self.element.on_click(position);

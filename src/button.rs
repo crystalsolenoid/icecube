@@ -1,4 +1,9 @@
-use crate::{element::Element, layout::Padding, quad::Quad, text::Text};
+use crate::{
+    element::Element,
+    layout::{CalculatedLayout, Padding},
+    quad::Quad,
+    text::Text,
+};
 
 pub struct Button {
     pub text: Text,
@@ -6,14 +11,14 @@ pub struct Button {
 }
 
 impl Element for Button {
-    fn draw(&self, frame: &mut [u8], position: (u32, u32)) {
-        self.quad.draw(frame, position);
+    fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
+        self.quad.draw(frame, region);
         self.text.draw(
             frame,
-            (
-                position.0 + self.quad.padding().left,
-                position.1 + self.quad.padding().top,
-            ),
+            region, //(
+                   //    position.0 + self.quad.padding().left,
+                   //    position.1 + self.quad.padding().top,
+                   //),
         );
     }
 
