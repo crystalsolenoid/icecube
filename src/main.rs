@@ -16,12 +16,72 @@ use winit::keyboard::KeyCode;
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 
-use icecube::layout::CalculatedLayout;
+use icecube::layout::{CalculatedLayout, Layout, Length};
 use icecube::quad::{BorderStyle, Quad, QuadStyle};
 use icecube::tree::Node;
 
 const WIDTH: u32 = 320;
 const HEIGHT: u32 = 240;
+
+// TODO can we specify a generic default for Node for a nicer API?
+fn build_ui_tree() -> Node<Layout> {
+    /*
+     * Intended layout tree:
+     *
+     * root (row)
+     *   | panel (main_dark; blue_dark)
+     *   | viewport (row) (main_light; main_dark)
+     *   |   | a (red_light; red_dark)
+     *   |   | b (blue_light; blue_dark)
+     */
+
+    let mut root = Node::root_node(WIDTH as usize, HEIGHT as usize); // TODO figure out how we want to
+                                                                     // handle coordinate types everywhere
+                                                                     // usize vs u32
+
+    let panel = Node::new(
+        Quad::new()
+            .fill(MAIN_DARK)
+            .border_thickness(2)
+            .border_color(BLUE_DARK),
+    )
+    .width(Length::Fixed(30))
+    .height(100);
+
+    let mut viewport = Node::new(
+        Quad::new()
+            .fill(MAIN_LIGHT)
+            .border_thickness(2)
+            .border_color(RED_DARK),
+    )
+    .width(Length::Shrink)
+    .height(100);
+
+    let a = Node::new(
+        Quad::new()
+            .fill(RED_LIGHT)
+            .border_thickness(2)
+            .border_color(RED_DARK),
+    )
+    .width(Length::Fixed(40))
+    .height(50);
+
+    let b = Node::new(
+        Quad::new()
+            .fill(BLUE_LIGHT)
+            .border_thickness(2)
+            .border_color(BLUE_DARK),
+    )
+    .width(Length::Fixed(40))
+    .height(90);
+
+    viewport.push(a);
+    viewport.push(b);
+
+    root.push(panel);
+    root.push(viewport);
+    return root;
+}
 
 fn main() -> Result<(), Error> {
     env_logger::init();
@@ -45,84 +105,7 @@ fn main() -> Result<(), Error> {
     let srgb = to_linear_rgb(MAIN_DARK);
     pixels.clear_color(srgb);
 
-    //let mut world = World::new();
-    let mut root = Node::root_node(WIDTH as usize, HEIGHT as usize); // TODO figure out how we want to
-
-    // handle coordinate types everywhere
-    let panel_style = QuadStyle {
-        fill_style: Some(MAIN_DARK),
-        border_style: Some(BorderStyle {
-            color: BLUE_DARK,
-            thickness: 5,
-        }),
-    };
-    let viewport_style = QuadStyle {
-        fill_style: Some(MAIN_LIGHT),
-        border_style: Some(BorderStyle {
-            color: MAIN_DARK,
-            thickness: 0,
-        }),
-    };
-
-    let mut panel = Node::new(
-        Quad::new(100, HEIGHT).style(panel_style),
-        //CalculatedLayout::test(0, 0, 100, HEIGHT),
-    );
-    let mut viewport = Node::new(
-        Quad::new(WIDTH - 100, HEIGHT)
-            .style(viewport_style)
-            .with_padding([5, 10].into()),
-        //CalculatedLayout::test(100, 0, WIDTH - 100, HEIGHT),
-    );
-
-    let quad_1 = Quad::new(90, 40)
-        .fill(RED_DARK)
-        .border_thickness(3)
-        .border_color(BLUE_LIGHT);
-
-    let widget_1 = Node::new(
-        quad_1.clone(), //, CalculatedLayout::test(0, 0, 90, 40)
-    );
-    let widget_3 = Node::new(
-        quad_1.clone(), //, CalculatedLayout::test(0, 50, 90, 40)
-    );
-    let widget_4 = Node::new(
-        quad_1.clone(), //, CalculatedLayout::test(0, 100, 90, 40)
-    );
-
-    let text_1 = Text {
-        content: "hw".into(),
-    };
-    let widget_2 = Node::new(
-        text_1.clone(),
-        //CalculatedLayout::test(0, 150, 90, 40)
-    );
-
-    panel.push(widget_1);
-    panel.push(widget_2);
-    panel.push(widget_4);
-    panel.push(widget_3);
-
-    let text_test = Node::new(
-        Text {
-            content: "I".into(),
-        },
-        //CalculatedLayout::test(100, 200, 90, 40),
-    );
-    viewport.push(text_test);
-    viewport.push(Node::new(
-        Button {
-            text: Text {
-                content: "C".into(),
-            },
-            quad: quad_1.fill(MAIN_DARK).with_padding([0, 0].into()),
-        },
-        //CalculatedLayout::test(100, 100, 90, 40),
-    ));
-
-    root.push(panel);
-    root.push(viewport);
-    let root = root.calculate_layout();
+    let root = build_ui_tree().calculate_layout();
 
     let mut mouse_position: Result<(usize, usize), (isize, isize)> = Err((0, 0));
 

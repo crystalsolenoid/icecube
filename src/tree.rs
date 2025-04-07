@@ -1,6 +1,6 @@
 use crate::{
     element::Element,
-    layout::{CalculatedLayout, Layout, Length},
+    layout::{CalculatedLayout, Layout, LayoutDirection, Length, Padding},
     quad::{Quad, QuadStyle},
 };
 
@@ -12,14 +12,17 @@ pub struct Node<LayoutStage> {
 
 impl Node<Layout> {
     pub fn root_node(width: usize, height: usize) -> Self {
-        let window = Quad::new(width as u32, height as u32).style(QuadStyle {
-            fill_style: None, // TODO should this be setting the background?
-            border_style: None,
-        });
+        let window = Quad::new()
+            .style(QuadStyle {
+                fill_style: None, // TODO should this be setting the background?
+                border_style: None,
+            })
+            .border_thickness(1)
+            .border_color(crate::palette::BLUE_LIGHT);
         Self {
             layout: Layout {
-                cross_length: width as u32,
-                flow_length: Length::Fixed(height as u32),
+                cross_length: height as u32,
+                flow_length: Length::Fixed(width as u32),
                 ..Layout::default()
             },
             ..Self::new(window)
@@ -34,6 +37,67 @@ impl Node<Layout> {
                 cross_length: 40,
                 ..Layout::default()
             },
+        }
+    }
+
+    pub fn width(self, width: Length) -> Self {
+        // TODO make Length implement from u32
+        Self {
+            layout: Layout {
+                flow_length: width,
+                ..self.layout
+            },
+            ..self
+        }
+    }
+
+    pub fn height(self, height: u32) -> Self {
+        Self {
+            layout: Layout {
+                cross_length: height,
+                ..self.layout
+            },
+            ..self
+        }
+    }
+
+    pub fn padding(self, padding: Padding) -> Self {
+        Self {
+            layout: Layout {
+                padding,
+                ..self.layout
+            },
+            ..self
+        }
+    }
+
+    pub fn spacing(self, spacing: u32) -> Self {
+        Self {
+            layout: Layout {
+                spacing,
+                ..self.layout
+            },
+            ..self
+        }
+    }
+
+    pub fn row(self) -> Self {
+        Self {
+            layout: Layout {
+                direction: LayoutDirection::Row,
+                ..self.layout
+            },
+            ..self
+        }
+    }
+
+    pub fn column(self) -> Self {
+        Self {
+            layout: Layout {
+                direction: LayoutDirection::Column,
+                ..self.layout
+            },
+            ..self
         }
     }
 

@@ -6,7 +6,7 @@
 */
 
 use crate::element::Element;
-use crate::layout::{CalculatedLayout, Padding};
+use crate::layout::CalculatedLayout;
 use crate::palette::Color;
 
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
@@ -25,18 +25,12 @@ pub struct BorderStyle {
 
 #[derive(Clone)]
 pub struct Quad {
-    pub width: usize,
-    pub height: usize,
-    padding: Padding,
     pub style: QuadStyle,
 }
 
 impl Quad {
-    pub fn new(width: u32, height: u32) -> Self {
+    pub fn new() -> Self {
         Self {
-            width: width as usize,
-            height: height as usize,
-            padding: Padding::default(),
             style: QuadStyle::default(),
         }
     }
@@ -48,10 +42,6 @@ impl Quad {
 
     pub fn style(mut self, style: QuadStyle) -> Self {
         self.style = style;
-        self
-    }
-    pub fn with_padding(mut self, padding: Padding) -> Self {
-        self.padding = padding;
         self
     }
 
@@ -88,7 +78,6 @@ impl Quad {
 
 impl Element for Quad {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
-        dbg!(region);
         let position = (region.x, region.y); // TODO fix types mess
                                              //TODO: Consider optimizing this if it is a bottleneck
         for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
@@ -123,28 +112,6 @@ impl Element for Quad {
             if let Some(color) = rgba {
                 pixel.copy_from_slice(&color);
             }
-        }
-    }
-    fn width(&self) -> u32 {
-        self.width as u32
-    }
-    fn height(&self) -> u32 {
-        self.height as u32
-    }
-    fn padding(&self) -> Padding {
-        let width = self.style.border_style.unwrap_or_default().thickness;
-
-        let Padding {
-            top,
-            right,
-            bottom,
-            left,
-        } = self.padding;
-        Padding {
-            top: top + width,
-            right: right + width,
-            bottom: bottom + width,
-            left: left + width,
         }
     }
 }

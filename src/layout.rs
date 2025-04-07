@@ -76,6 +76,7 @@ impl Node<Layout> {
         self.shrink_pass().grow_pass().position_pass((0, 0))
     }
 
+    /// Render pass 1/3
     fn shrink_pass(self) -> Node<ShrinkLayout> {
         let new_children: Vec<_> = self.children.into_iter().map(|c| c.shrink_pass()).collect();
         let new_flow_length = match self.layout.flow_length {
@@ -108,6 +109,7 @@ impl Node<Layout> {
 }
 
 impl Node<ShrinkLayout> {
+    /// Render pass 2/3
     fn grow_pass(self) -> Node<GrownLayout> {
         let new_flow_length = match self.layout.flow_length {
             ShrunkLength::Grow => 50,
@@ -129,6 +131,7 @@ impl Node<ShrinkLayout> {
     }
 }
 impl Node<GrownLayout> {
+    /// Render pass 3/3
     fn position_pass(self, parent_position: (u32, u32)) -> Node<CalculatedLayout> {
         let new_children: Vec<_> = self
             .children
@@ -137,10 +140,10 @@ impl Node<GrownLayout> {
                 let start_position = *accumulated_position;
                 match self.layout.direction {
                     LayoutDirection::Row => {
-                        accumulated_position.0 += child_node.element.width();
+                        accumulated_position.0 += child_node.layout.flow_length;
                     }
                     LayoutDirection::Column => {
-                        accumulated_position.1 += child_node.element.height();
+                        accumulated_position.1 += child_node.layout.flow_length;
                     }
                 };
                 Some(child_node.position_pass(start_position))

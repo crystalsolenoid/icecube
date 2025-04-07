@@ -1,5 +1,5 @@
 use crate::element::Element;
-use crate::layout::{CalculatedLayout, Padding};
+use crate::layout::CalculatedLayout;
 use crate::palette::BLUE_LIGHT;
 
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
@@ -10,12 +10,6 @@ pub struct Text {
 }
 
 impl Element for Text {
-    fn width(&self) -> u32 {
-        100
-    }
-    fn height(&self) -> u32 {
-        10
-    }
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
         let font = include_bytes!("resources/test_font.png");
         let font = image::load_from_memory(font)
@@ -51,8 +45,5 @@ impl Element for Text {
                     }
                 }
             });
-    }
-    fn padding(&self) -> Padding {
-        Padding::default()
     }
 }
