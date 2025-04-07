@@ -46,7 +46,8 @@ fn build_ui_tree() -> Node<Layout> {
             .border_color(BLUE_DARK),
     )
     .width(Length::Fixed(30))
-    .height(100);
+    .height(100)
+    .padding(4);
 
     let mut viewport = Node::new(
         Quad::new()
@@ -55,7 +56,10 @@ fn build_ui_tree() -> Node<Layout> {
             .border_color(RED_DARK),
     )
     .width(Length::Shrink)
-    .height(100);
+    //.column()
+    .height(100)
+    .spacing(10)
+    .padding(4);
 
     let a = Node::new(
         Quad::new()

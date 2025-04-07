@@ -61,10 +61,10 @@ impl Node<Layout> {
         }
     }
 
-    pub fn padding(self, padding: Padding) -> Self {
+    pub fn padding(self, padding: impl Into<Padding>) -> Self {
         Self {
             layout: Layout {
-                padding,
+                padding: padding.into(),
                 ..self.layout
             },
             ..self
