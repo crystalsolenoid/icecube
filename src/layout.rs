@@ -11,7 +11,7 @@ pub struct CalculatedLayout {
 #[derive(Clone, Copy, Default)]
 pub struct Layout {
     // about the node itself
-    pub cross_length: GrownLength,
+    pub cross_length: Length,
     pub flow_length: Length,
     // about its children
     pub padding: Padding,
@@ -21,7 +21,7 @@ pub struct Layout {
 
 struct ShrinkLayout {
     // about the node itself
-    pub cross_length: GrownLength,
+    pub cross_length: ShrunkLength,
     pub flow_length: ShrunkLength,
     // about its children
     pub padding: Padding,
@@ -89,6 +89,7 @@ impl Node<Layout> {
     /// bottom-up pass
     fn shrink_pass(self) -> Node<ShrinkLayout> {
         let new_children: Vec<_> = self.children.into_iter().map(|c| c.shrink_pass()).collect();
+        //// Flow
         let new_flow_length = match self.layout.flow_length {
             Length::Shrink => {
                 let l: u32 = new_children
@@ -108,10 +109,29 @@ impl Node<Layout> {
             Length::Fixed(l) => ShrunkLength::Fixed(l),
         };
 
+        //// Cross
+        let new_cross_length = match self.layout.cross_length {
+            Length::Shrink => {
+                let max_child_cross_length: u32 = new_children
+                    .iter()
+                    .map(|child| match child.layout.cross_length {
+                        ShrunkLength::Grow => 0,
+                        ShrunkLength::Fixed(l) => l,
+                    })
+                    .max()
+                    .unwrap_or(0);
+                ShrunkLength::Fixed(
+                    max_child_cross_length + self.layout.padding.top + self.layout.padding.bottom,
+                )
+            }
+            Length::Grow => ShrunkLength::Grow,
+            Length::Fixed(l) => ShrunkLength::Fixed(l),
+        };
+
         Node {
             layout: ShrinkLayout {
                 flow_length: new_flow_length,
-                cross_length: self.layout.cross_length,
+                cross_length: new_cross_length,
                 padding: self.layout.padding,
                 direction: self.layout.direction,
                 spacing: self.layout.spacing,
@@ -160,7 +180,10 @@ impl Node<ShrinkLayout> {
         Node {
             layout: GrownLayout {
                 flow_length: assigned_length,
-                cross_length: self.layout.cross_length,
+                cross_length: match self.layout.cross_length {
+                    ShrunkLength::Grow => todo!(),
+                    ShrunkLength::Fixed(l) => l,
+                },
                 padding: self.layout.padding,
                 direction: self.layout.direction,
                 spacing: self.layout.spacing,

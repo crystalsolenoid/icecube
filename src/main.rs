@@ -46,7 +46,7 @@ fn build_ui_tree() -> Node<Layout> {
             .border_color(BLUE_DARK),
     )
     .width(Length::Grow)
-    .height(100)
+    .height(Length::Fixed(100))
     .padding(4);
 
     let mut viewport = Node::new(
@@ -57,7 +57,7 @@ fn build_ui_tree() -> Node<Layout> {
     )
     .width(Length::Grow)
     //.column()
-    .height(100)
+    .height(Length::Shrink)
     .spacing(10)
     .padding(4);
 
@@ -68,7 +68,7 @@ fn build_ui_tree() -> Node<Layout> {
             .border_color(RED_DARK),
     )
     .width(Length::Grow)
-    .height(50);
+    .height(Length::Fixed(50));
 
     let b = Node::new(
         Quad::new()
@@ -77,7 +77,7 @@ fn build_ui_tree() -> Node<Layout> {
             .border_color(BLUE_DARK),
     )
     .width(Length::Grow)
-    .height(90);
+    .height(Length::Fixed(30));
     let c = Node::new(
         Quad::new()
             .fill(RED_DARK)
@@ -85,7 +85,7 @@ fn build_ui_tree() -> Node<Layout> {
             .border_color(RED_LIGHT),
     )
     .width(Length::Grow)
-    .height(90);
+    .height(Length::Fixed(40));
 
     viewport.push(a);
     viewport.push(b);
