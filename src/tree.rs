@@ -42,7 +42,7 @@ impl Node<Layout> {
         }
     }
 
-    pub fn width(self, width: Length) -> Self {
+    pub fn flow_length(self, width: Length) -> Self {
         // TODO make Length implement from u32
         Self {
             layout: Layout {
@@ -53,7 +53,7 @@ impl Node<Layout> {
         }
     }
 
-    pub fn height(self, height: Length) -> Self {
+    pub fn cross_length(self, height: Length) -> Self {
         Self {
             layout: Layout {
                 cross_length: height,

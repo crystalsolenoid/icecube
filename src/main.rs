@@ -35,9 +35,9 @@ fn build_ui_tree() -> Node<Layout> {
      *   |   | b (blue_light; blue_dark)
      */
 
-    let mut root = Node::root_node(WIDTH as usize, HEIGHT as usize); // TODO figure out how we want to
-                                                                     // handle coordinate types everywhere
-                                                                     // usize vs u32
+    let mut root = Node::root_node(WIDTH as usize, HEIGHT as usize).column(); // TODO figure out how we want to
+                                                                              // handle coordinate types everywhere
+                                                                              // usize vs u32
 
     let panel = Node::new(
         Quad::new()
@@ -45,8 +45,8 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(BLUE_DARK),
     )
-    .width(Length::Grow)
-    .height(Length::Fixed(100))
+    .flow_length(Length::Fixed(50))
+    .cross_length(Length::Fixed(150))
     .padding(4);
 
     let mut viewport = Node::new(
@@ -55,11 +55,11 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(RED_DARK),
     )
-    .width(Length::Grow)
-    //.column()
-    .height(Length::Grow)
+    .flow_length(Length::Shrink)
+    .cross_length(Length::Shrink)
     .spacing(10)
-    .padding(4);
+    .padding(4)
+    .column();
 
     let a = Node::new(
         Quad::new()
@@ -67,8 +67,8 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(RED_DARK),
     )
-    .width(Length::Grow)
-    .height(Length::Fixed(50));
+    .flow_length(Length::Fixed(20))
+    .cross_length(Length::Fixed(30));
 
     let b = Node::new(
         Quad::new()
@@ -76,16 +76,17 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(BLUE_DARK),
     )
-    .width(Length::Grow)
-    .height(Length::Grow);
+    .flow_length(Length::Fixed(2))
+    .cross_length(Length::Fixed(20));
+
     let c = Node::new(
         Quad::new()
             .fill(RED_DARK)
             .border_thickness(2)
             .border_color(RED_LIGHT),
     )
-    .width(Length::Grow)
-    .height(Length::Fixed(40));
+    .flow_length(Length::Fixed(20))
+    .cross_length(Length::Fixed(30));
 
     viewport.push(a);
     viewport.push(b);
