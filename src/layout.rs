@@ -134,7 +134,10 @@ impl Node<ShrinkLayout> {
                     ShrunkLength::Grow => 0,
                     ShrunkLength::Fixed(l) => l,
                 })
-                .sum::<u32>();
+                .sum::<u32>()
+            - self.layout.padding.left
+            - self.layout.padding.right
+            - self.layout.spacing * self.children.len().saturating_sub(1) as u32;
 
         let new_children: Vec<_> = self
             .children

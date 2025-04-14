@@ -23,6 +23,9 @@ impl Node<Layout> {
             layout: Layout {
                 cross_length: height as u32,
                 flow_length: Length::Fixed(width as u32),
+                //TODO: create an API that automatically keeps quad border thickness and padding in
+                //sync
+                padding: 1.into(),
                 ..Layout::default()
             },
             ..Self::new(window)

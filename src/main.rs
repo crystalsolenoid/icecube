@@ -45,7 +45,7 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(BLUE_DARK),
     )
-    .width(Length::Grow)
+    .width(Length::Fixed(20))
     .height(100)
     .padding(4);
 
@@ -55,7 +55,7 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(RED_DARK),
     )
-    .width(Length::Shrink)
+    .width(Length::Grow)
     //.column()
     .height(100)
     .spacing(10)
@@ -67,7 +67,7 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(RED_DARK),
     )
-    .width(Length::Fixed(40))
+    .width(Length::Grow)
     .height(50);
 
     let b = Node::new(
