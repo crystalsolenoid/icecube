@@ -73,7 +73,16 @@ pub struct Padding {
 //    fn layout_parameters(&self) -> LayoutParameters {
 impl Node<Layout> {
     pub fn calculate_layout(self) -> Node<CalculatedLayout> {
-        self.shrink_pass().grow_pass().position_pass((0, 0))
+        // TODO: Use better types for root node, so we don't have to match for unsupported root
+        // node length types
+        let root_length = match self.layout.flow_length {
+            Length::Grow => todo!(),
+            Length::Shrink => todo!(),
+            Length::Fixed(l) => l,
+        };
+        self.shrink_pass()
+            .grow_pass(root_length)
+            .position_pass((0, 0))
     }
 
     /// Render pass 1/3
@@ -116,16 +125,29 @@ impl Node<Layout> {
 impl Node<ShrinkLayout> {
     /// Render pass 2/3
     /// top-down
-    fn grow_pass(self) -> Node<GrownLayout> {
-        let new_flow_length = match self.layout.flow_length {
-            ShrunkLength::Grow => 50,
-            ShrunkLength::Fixed(l) => l,
-        };
-        let new_children: Vec<_> = self.children.into_iter().map(|c| c.grow_pass()).collect();
+    fn grow_pass(self, assigned_length: GrownLength) -> Node<GrownLayout> {
+        let remaining_length = assigned_length
+            - self
+                .children
+                .iter()
+                .map(|c| match c.layout.flow_length {
+                    ShrunkLength::Grow => 0,
+                    ShrunkLength::Fixed(l) => l,
+                })
+                .sum::<u32>();
+
+        let new_children: Vec<_> = self
+            .children
+            .into_iter()
+            .map(|c| match c.layout.flow_length {
+                ShrunkLength::Grow => c.grow_pass(remaining_length),
+                ShrunkLength::Fixed(l) => c.grow_pass(l),
+            })
+            .collect();
 
         Node {
             layout: GrownLayout {
-                flow_length: new_flow_length,
+                flow_length: assigned_length,
                 cross_length: self.layout.cross_length,
                 padding: self.layout.padding,
                 direction: self.layout.direction,

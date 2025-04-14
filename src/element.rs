@@ -1,4 +1,4 @@
-use crate::layout::{CalculatedLayout, Layout, Padding};
+use crate::layout::{CalculatedLayout, Layout};
 
 pub trait Element {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout);

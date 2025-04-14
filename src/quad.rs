@@ -28,6 +28,12 @@ pub struct Quad {
     pub style: QuadStyle,
 }
 
+impl Default for Quad {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Quad {
     pub fn new() -> Self {
         Self {

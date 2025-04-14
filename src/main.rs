@@ -45,7 +45,7 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(BLUE_DARK),
     )
-    .width(Length::Fixed(30))
+    .width(Length::Grow)
     .height(100)
     .padding(4);
 
@@ -84,7 +84,7 @@ fn build_ui_tree() -> Node<Layout> {
 
     root.push(panel);
     root.push(viewport);
-    return root;
+    root
 }
 
 fn main() -> Result<(), Error> {
