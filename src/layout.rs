@@ -38,7 +38,7 @@ struct GrownLayout {
     pub spacing: u32,
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, PartialEq)]
 enum ShrunkLength {
     #[default]
     Grow,
@@ -139,11 +139,20 @@ impl Node<ShrinkLayout> {
             - self.layout.padding.right
             - self.layout.spacing * self.children.len().saturating_sub(1) as u32;
 
+        let child_grow_number: u32 = self
+            .children
+            .iter()
+            .filter(|c| c.layout.flow_length == ShrunkLength::Grow)
+            .count()
+            .try_into()
+            .unwrap();
+
         let new_children: Vec<_> = self
             .children
             .into_iter()
             .map(|c| match c.layout.flow_length {
-                ShrunkLength::Grow => c.grow_pass(remaining_length),
+                //TODO: Potentially can lose up to 1 pixel of space per child
+                ShrunkLength::Grow => c.grow_pass(remaining_length / child_grow_number),
                 ShrunkLength::Fixed(l) => c.grow_pass(l),
             })
             .collect();
