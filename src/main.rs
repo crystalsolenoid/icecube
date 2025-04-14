@@ -57,7 +57,7 @@ fn build_ui_tree() -> Node<Layout> {
     )
     .width(Length::Grow)
     //.column()
-    .height(Length::Shrink)
+    .height(Length::Grow)
     .spacing(10)
     .padding(4);
 
@@ -77,7 +77,7 @@ fn build_ui_tree() -> Node<Layout> {
             .border_color(BLUE_DARK),
     )
     .width(Length::Grow)
-    .height(Length::Fixed(30));
+    .height(Length::Grow);
     let c = Node::new(
         Quad::new()
             .fill(RED_DARK)

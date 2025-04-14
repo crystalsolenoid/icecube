@@ -76,12 +76,17 @@ impl Node<Layout> {
         // TODO: Use better types for root node, so we don't have to match for unsupported root
         // node length types
         let root_length = match self.layout.flow_length {
-            Length::Grow => todo!(),
-            Length::Shrink => todo!(),
+            Length::Grow => panic!(),
+            Length::Shrink => panic!(),
+            Length::Fixed(l) => l,
+        };
+        let root_cross_length = match self.layout.cross_length {
+            Length::Grow => panic!(),
+            Length::Shrink => panic!(),
             Length::Fixed(l) => l,
         };
         self.shrink_pass()
-            .grow_pass(root_length)
+            .grow_pass(root_length, root_cross_length)
             .position_pass((0, 0))
     }
 
@@ -145,8 +150,12 @@ impl Node<Layout> {
 impl Node<ShrinkLayout> {
     /// Render pass 2/3
     /// top-down
-    fn grow_pass(self, assigned_length: GrownLength) -> Node<GrownLayout> {
-        let remaining_length = assigned_length
+    fn grow_pass(
+        self,
+        assigned_flow_length: GrownLength,
+        assigned_cross_length: GrownLength,
+    ) -> Node<GrownLayout> {
+        let remaining_length = assigned_flow_length
             - self
                 .children
                 .iter()
@@ -167,23 +176,30 @@ impl Node<ShrinkLayout> {
             .try_into()
             .unwrap();
 
+        let available_cross_length: GrownLength =
+            assigned_cross_length - self.layout.padding.top - self.layout.padding.bottom;
+
         let new_children: Vec<_> = self
             .children
             .into_iter()
-            .map(|c| match c.layout.flow_length {
-                //TODO: Potentially can lose up to 1 pixel of space per child
-                ShrunkLength::Grow => c.grow_pass(remaining_length / child_grow_number),
-                ShrunkLength::Fixed(l) => c.grow_pass(l),
+            .map(|c| {
+                let child_flow_length = match c.layout.flow_length {
+                    //TODO: Potentially can lose up to 1 pixel of space per child
+                    ShrunkLength::Grow => remaining_length / child_grow_number,
+                    ShrunkLength::Fixed(l) => l,
+                };
+                let child_cross_length = match c.layout.cross_length {
+                    ShrunkLength::Grow => available_cross_length,
+                    ShrunkLength::Fixed(l) => l,
+                };
+                c.grow_pass(child_flow_length, child_cross_length)
             })
             .collect();
 
         Node {
             layout: GrownLayout {
-                flow_length: assigned_length,
-                cross_length: match self.layout.cross_length {
-                    ShrunkLength::Grow => todo!(),
-                    ShrunkLength::Fixed(l) => l,
-                },
+                flow_length: assigned_flow_length,
+                cross_length: assigned_cross_length,
                 padding: self.layout.padding,
                 direction: self.layout.direction,
                 spacing: self.layout.spacing,
@@ -199,7 +215,7 @@ impl Node<GrownLayout> {
     fn position_pass(self, parent_position: (u32, u32)) -> Node<CalculatedLayout> {
         let first_child_position = (
             parent_position.0 + self.layout.padding.left,
-            parent_position.1,
+            parent_position.1 + self.layout.padding.top,
         );
         let new_children: Vec<_> = self
             .children
