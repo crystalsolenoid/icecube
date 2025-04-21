@@ -80,10 +80,10 @@ struct GrownLayout {
     pub spacing: u32,
 }
 impl GrownLayout {
-    fn xy_size(&self) -> XY {
+    fn xy_size(&self, parent_direction: LayoutDirection) -> XY {
         let flow = self.flow_length;
         let cross = self.cross_length;
-        match self.direction {
+        match parent_direction {
             LayoutDirection::Column => XY(cross, flow),
             LayoutDirection::Row => XY(flow, cross),
         }
@@ -137,9 +137,10 @@ impl Node<Layout> {
             Length::Shrink => panic!(),
             Length::Fixed(l) => l,
         };
+        let root_dir = self.layout.direction;
         self.shrink_pass()
             .grow_pass(XY(root_length, root_cross_length))
-            .position_pass((0, 0))
+            .position_pass((0, 0), root_dir)
     }
 
     /// Render pass 1/3
@@ -152,18 +153,10 @@ impl Node<Layout> {
             Length::Shrink => {
                 let l: u32 = new_children
                     .iter()
-                    .map(
-                        |child| match self.layout.direction == child.layout.direction {
-                            true => match child.layout.flow_length {
-                                ShrunkLength::Grow => 0,
-                                ShrunkLength::Fixed(l) => l,
-                            },
-                            false => match child.layout.cross_length {
-                                ShrunkLength::Grow => 0,
-                                ShrunkLength::Fixed(l) => l,
-                            },
-                        },
-                    )
+                    .map(|child| match child.layout.flow_length {
+                        ShrunkLength::Grow => 0,
+                        ShrunkLength::Fixed(l) => l,
+                    })
                     .sum();
                 let total_spacing =
                     new_children.len().saturating_sub(1) as u32 * self.layout.spacing;
@@ -178,18 +171,10 @@ impl Node<Layout> {
             Length::Shrink => {
                 let max_child_cross_length: u32 = new_children
                     .iter()
-                    .map(
-                        |child| match self.layout.direction == child.layout.direction {
-                            true => match child.layout.cross_length {
-                                ShrunkLength::Grow => 0,
-                                ShrunkLength::Fixed(l) => l,
-                            },
-                            false => match child.layout.flow_length {
-                                ShrunkLength::Grow => 0,
-                                ShrunkLength::Fixed(l) => l,
-                            },
-                        },
-                    )
+                    .map(|child| match child.layout.cross_length {
+                        ShrunkLength::Grow => 0,
+                        ShrunkLength::Fixed(l) => l,
+                    })
                     .max()
                     .unwrap_or(0);
                 ShrunkLength::Fixed(max_child_cross_length + flow_cross_padding.1)
@@ -302,7 +287,11 @@ impl Node<ShrinkLayout> {
 impl Node<GrownLayout> {
     /// Render pass 3/3
     /// top-down
-    fn position_pass(self, parent_position: (u32, u32)) -> Node<CalculatedLayout> {
+    fn position_pass(
+        self,
+        parent_position: (u32, u32),
+        parent_direction: LayoutDirection,
+    ) -> Node<CalculatedLayout> {
         let first_child_position = (
             parent_position.0 + self.layout.padding.top,
             parent_position.1 + self.layout.padding.left,
@@ -312,24 +301,24 @@ impl Node<GrownLayout> {
             .into_iter()
             .scan(first_child_position, |accumulated_position, child_node| {
                 let start_position = *accumulated_position;
+                let XY(child_width, child_height) =
+                    child_node.layout.xy_size(self.layout.direction);
                 match self.layout.direction {
                     LayoutDirection::Row => {
-                        accumulated_position.0 +=
-                            child_node.layout.xy_size().0 + self.layout.spacing;
+                        accumulated_position.0 += child_width + self.layout.spacing;
                     }
                     LayoutDirection::Column => {
-                        accumulated_position.1 +=
-                            child_node.layout.xy_size().1 + self.layout.spacing;
+                        accumulated_position.1 += child_height + self.layout.spacing;
                     }
                 };
-                Some(child_node.position_pass(start_position))
+                Some(child_node.position_pass(start_position, self.layout.direction))
             })
             .collect();
 
         let x = parent_position.0;
         let y = parent_position.1;
 
-        let xy_size = self.layout.xy_size();
+        let xy_size = self.layout.xy_size(parent_direction);
         Node {
             layout: CalculatedLayout::test(x, y, xy_size.0, xy_size.1),
             children: new_children,

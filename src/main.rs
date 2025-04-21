@@ -35,19 +35,21 @@ fn build_ui_tree() -> Node<Layout> {
      *   |   | b (blue_light; blue_dark)
      */
 
-    let mut root = Node::root_node(WIDTH as usize, HEIGHT as usize).column(); // TODO figure out how we want to
-                                                                              // handle coordinate types everywhere
-                                                                              // usize vs u32
+    let mut root = Node::root_node(WIDTH as usize, HEIGHT as usize).row(); // TODO figure out how we want to
+                                                                           // handle coordinate types everywhere
+                                                                           // usize vs u32
 
-    let panel = Node::new(
+    let mut panel = Node::new(
         Quad::new()
             .fill(MAIN_DARK)
             .border_thickness(2)
             .border_color(BLUE_DARK),
     )
-    .flow_length(Length::Fixed(50))
-    .cross_length(Length::Fixed(150))
-    .padding(4);
+    .flow_length(Length::Grow)
+    .cross_length(Length::Fixed(50))
+    .column()
+    .padding(4)
+    .spacing(2);
 
     let mut viewport = Node::new(
         Quad::new()
@@ -55,11 +57,11 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(RED_DARK),
     )
-    .flow_length(Length::Shrink)
-    .cross_length(Length::Shrink)
+    .flow_length(Length::Grow)
+    .cross_length(Length::Grow)
     .spacing(10)
     .padding(4)
-    .column();
+    .row();
 
     let a = Node::new(
         Quad::new()
@@ -67,8 +69,9 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(RED_DARK),
     )
-    .flow_length(Length::Fixed(20))
-    .cross_length(Length::Fixed(30));
+    .flow_length(Length::Fixed(60))
+    .cross_length(Length::Fixed(30))
+    .row();
 
     let b = Node::new(
         Quad::new()
@@ -76,8 +79,9 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(BLUE_DARK),
     )
-    .flow_length(Length::Fixed(2))
-    .cross_length(Length::Fixed(20));
+    .flow_length(Length::Fixed(30))
+    .cross_length(Length::Fixed(60))
+    .row();
 
     let c = Node::new(
         Quad::new()
@@ -85,8 +89,27 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(RED_LIGHT),
     )
-    .flow_length(Length::Fixed(20))
-    .cross_length(Length::Fixed(30));
+    .flow_length(Length::Fixed(60))
+    .cross_length(Length::Fixed(30))
+    .row();
+
+    let menu_item = || {
+        Node::new(
+            Quad::new()
+                .fill(MAIN_LIGHT)
+                .border_thickness(1)
+                .border_color(BLUE_LIGHT),
+        )
+        .flow_length(Length::Fixed(30))
+        .cross_length(Length::Fixed(10))
+        .row()
+    };
+
+    panel.push(menu_item());
+    panel.push(menu_item());
+    panel.push(menu_item());
+    panel.push(menu_item());
+    panel.push(menu_item());
 
     viewport.push(a);
     viewport.push(b);
