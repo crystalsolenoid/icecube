@@ -11,8 +11,8 @@ pub struct CalculatedLayout {
 #[derive(Clone, Copy, Default)]
 pub struct Layout {
     // about the node itself
-    pub cross_length: Length,
-    pub flow_length: Length,
+    pub width: Length,
+    pub height: Length,
     // about its children
     pub padding: Padding,
     pub direction: LayoutDirection,
@@ -36,8 +36,8 @@ impl Layout {
 
 struct ShrinkLayout {
     // about the node itself
-    pub cross_length: ShrunkLength,
-    pub flow_length: ShrunkLength,
+    pub width: ShrunkLength,
+    pub height: ShrunkLength,
     // about its children
     pub padding: Padding,
     pub direction: LayoutDirection,
@@ -54,14 +54,6 @@ impl ShrinkLayout {
         }
     }
 
-    fn flow_cross_to_xy(&self, flow_cross: FlowCross) -> XY {
-        let FlowCross(flow, cross) = flow_cross;
-        match self.direction {
-            LayoutDirection::Column => XY(cross, flow),
-            LayoutDirection::Row => XY(flow, cross),
-        }
-    }
-
     fn xy_to_flow_cross(&self, xy: XY) -> FlowCross {
         let XY(x, y) = xy;
         match self.direction {
@@ -72,22 +64,12 @@ impl ShrinkLayout {
 }
 struct GrownLayout {
     // about the node itself
-    pub cross_length: GrownLength,
-    pub flow_length: GrownLength,
+    pub width: GrownLength,
+    pub height: GrownLength,
     // about its children
     pub padding: Padding,
     pub direction: LayoutDirection,
     pub spacing: u32,
-}
-impl GrownLayout {
-    fn xy_size(&self, parent_direction: LayoutDirection) -> XY {
-        let flow = self.flow_length;
-        let cross = self.cross_length;
-        match parent_direction {
-            LayoutDirection::Column => XY(cross, flow),
-            LayoutDirection::Row => XY(flow, cross),
-        }
-    }
 }
 
 #[derive(Clone, Copy, Default, PartialEq)]
@@ -127,20 +109,13 @@ impl Node<Layout> {
     pub fn calculate_layout(self) -> Node<CalculatedLayout> {
         // TODO: Use better types for root node, so we don't have to match for unsupported root
         // node length types
-        let root_length = match self.layout.flow_length {
-            Length::Grow => panic!(),
-            Length::Shrink => panic!(),
-            Length::Fixed(l) => l,
+        let root_size = match (self.layout.width, self.layout.height) {
+            (Length::Fixed(w), Length::Fixed(h)) => XY(w, h),
+            (_, _) => panic!(),
         };
-        let root_cross_length = match self.layout.cross_length {
-            Length::Grow => panic!(),
-            Length::Shrink => panic!(),
-            Length::Fixed(l) => l,
-        };
-        let root_dir = self.layout.direction;
         self.shrink_pass()
-            .grow_pass(XY(root_length, root_cross_length))
-            .position_pass((0, 0), root_dir)
+            .grow_pass(root_size)
+            .position_pass((0, 0))
     }
 
     /// Render pass 1/3
@@ -148,14 +123,26 @@ impl Node<Layout> {
     fn shrink_pass(self) -> Node<ShrinkLayout> {
         let new_children: Vec<_> = self.children.into_iter().map(|c| c.shrink_pass()).collect();
         let flow_cross_padding = self.layout.summed_padding();
+        //TODO: calculate new values in this first match statement?
+        let (flow_length, cross_length) = match self.layout.direction {
+            LayoutDirection::Column => (self.layout.height, self.layout.width),
+            LayoutDirection::Row => (self.layout.width, self.layout.height),
+        };
+
         //// Flow
-        let new_flow_length = match self.layout.flow_length {
+        let new_flow_length = match flow_length {
             Length::Shrink => {
                 let l: u32 = new_children
                     .iter()
-                    .map(|child| match child.layout.flow_length {
-                        ShrunkLength::Grow => 0,
-                        ShrunkLength::Fixed(l) => l,
+                    .map(|child| match self.layout.direction {
+                        LayoutDirection::Column => match child.layout.height {
+                            ShrunkLength::Grow => 0,
+                            ShrunkLength::Fixed(l) => l,
+                        },
+                        LayoutDirection::Row => match child.layout.width {
+                            ShrunkLength::Grow => 0,
+                            ShrunkLength::Fixed(l) => l,
+                        },
                     })
                     .sum();
                 let total_spacing =
@@ -167,13 +154,19 @@ impl Node<Layout> {
         };
 
         //// Cross
-        let new_cross_length = match self.layout.cross_length {
+        let new_cross_length = match cross_length {
             Length::Shrink => {
                 let max_child_cross_length: u32 = new_children
                     .iter()
-                    .map(|child| match child.layout.cross_length {
-                        ShrunkLength::Grow => 0,
-                        ShrunkLength::Fixed(l) => l,
+                    .map(|child| match self.layout.direction {
+                        LayoutDirection::Column => match child.layout.width {
+                            ShrunkLength::Grow => 0,
+                            ShrunkLength::Fixed(l) => l,
+                        },
+                        LayoutDirection::Row => match child.layout.height {
+                            ShrunkLength::Grow => 0,
+                            ShrunkLength::Fixed(l) => l,
+                        },
                     })
                     .max()
                     .unwrap_or(0);
@@ -183,10 +176,14 @@ impl Node<Layout> {
             Length::Fixed(l) => ShrunkLength::Fixed(l),
         };
 
+        let (new_width, new_height) = match self.layout.direction {
+            LayoutDirection::Column => (new_cross_length, new_flow_length),
+            LayoutDirection::Row => (new_flow_length, new_cross_length),
+        };
         Node {
             layout: ShrinkLayout {
-                flow_length: new_flow_length,
-                cross_length: new_cross_length,
+                width: new_width,
+                height: new_height,
                 padding: self.layout.padding,
                 direction: self.layout.direction,
                 spacing: self.layout.spacing,
@@ -200,12 +197,7 @@ impl Node<Layout> {
 impl Node<ShrinkLayout> {
     /// Render pass 2/3
     /// top-down
-    fn grow_pass(
-        self,
-        assigned_xy: XY,
-        //assigned_flow_length: GrownLength,
-        //assigned_cross_length: GrownLength,
-    ) -> Node<GrownLayout> {
+    fn grow_pass(self, assigned_xy: XY) -> Node<GrownLayout> {
         let FlowCross(assigned_flow_length, assigned_cross_length) =
             self.layout.xy_to_flow_cross(assigned_xy);
         let flow_cross_padding = self.layout.summed_padding();
@@ -213,12 +205,12 @@ impl Node<ShrinkLayout> {
             .saturating_sub(
                 self.children
                     .iter()
-                    .map(|c| match self.layout.direction == c.layout.direction {
-                        true => match c.layout.flow_length {
+                    .map(|c| match self.layout.direction {
+                        LayoutDirection::Column => match c.layout.height {
                             ShrunkLength::Grow => 0,
                             ShrunkLength::Fixed(l) => l,
                         },
-                        false => match c.layout.cross_length {
+                        LayoutDirection::Row => match c.layout.width {
                             ShrunkLength::Grow => 0,
                             ShrunkLength::Fixed(l) => l,
                         },
@@ -231,7 +223,10 @@ impl Node<ShrinkLayout> {
         let child_grow_number: u32 = self
             .children
             .iter()
-            .filter(|c| c.layout.flow_length == ShrunkLength::Grow)
+            .filter(|c| match self.layout.direction {
+                LayoutDirection::Column => c.layout.height == ShrunkLength::Grow,
+                LayoutDirection::Row => c.layout.width == ShrunkLength::Grow,
+            })
             .count()
             .try_into()
             .unwrap();
@@ -242,39 +237,29 @@ impl Node<ShrinkLayout> {
             .children
             .into_iter()
             .map(|c| {
-                let child_flow_length = match self.layout.direction == c.layout.direction {
-                    true => match c.layout.flow_length {
-                        ShrunkLength::Grow => remaining_length / child_grow_number,
-                        ShrunkLength::Fixed(l) => l,
-                    },
-                    false => match c.layout.cross_length {
-                        ShrunkLength::Grow => remaining_length / child_grow_number,
-                        ShrunkLength::Fixed(l) => l,
-                    },
+                let child_width = match (self.layout.direction, c.layout.width) {
+                    (LayoutDirection::Column, ShrunkLength::Grow) => available_cross_length,
+                    (LayoutDirection::Row, ShrunkLength::Grow) => {
+                        remaining_length / child_grow_number
+                    }
+                    (_, ShrunkLength::Fixed(l)) => l,
+                };
+                let child_height = match (self.layout.direction, c.layout.height) {
+                    (LayoutDirection::Column, ShrunkLength::Grow) => {
+                        remaining_length / child_grow_number
+                    }
+                    (LayoutDirection::Row, ShrunkLength::Grow) => available_cross_length,
+                    (_, ShrunkLength::Fixed(l)) => l,
                 };
 
-                let child_cross_length = match self.layout.direction == c.layout.direction {
-                    true => match c.layout.cross_length {
-                        ShrunkLength::Grow => available_cross_length,
-                        ShrunkLength::Fixed(l) => l,
-                    },
-                    false => match c.layout.flow_length {
-                        ShrunkLength::Grow => available_cross_length,
-                        ShrunkLength::Fixed(l) => l,
-                    },
-                };
-
-                let child_size_xy = c
-                    .layout
-                    .flow_cross_to_xy(FlowCross(child_flow_length, child_cross_length));
-                c.grow_pass(child_size_xy)
+                c.grow_pass(XY(child_width, child_height))
             })
             .collect();
 
         Node {
             layout: GrownLayout {
-                flow_length: assigned_flow_length,
-                cross_length: assigned_cross_length,
+                width: assigned_xy.0,
+                height: assigned_xy.1,
                 padding: self.layout.padding,
                 direction: self.layout.direction,
                 spacing: self.layout.spacing,
@@ -287,11 +272,7 @@ impl Node<ShrinkLayout> {
 impl Node<GrownLayout> {
     /// Render pass 3/3
     /// top-down
-    fn position_pass(
-        self,
-        parent_position: (u32, u32),
-        parent_direction: LayoutDirection,
-    ) -> Node<CalculatedLayout> {
+    fn position_pass(self, parent_position: (u32, u32)) -> Node<CalculatedLayout> {
         let first_child_position = (
             parent_position.0 + self.layout.padding.top,
             parent_position.1 + self.layout.padding.left,
@@ -301,26 +282,22 @@ impl Node<GrownLayout> {
             .into_iter()
             .scan(first_child_position, |accumulated_position, child_node| {
                 let start_position = *accumulated_position;
-                let XY(child_width, child_height) =
-                    child_node.layout.xy_size(self.layout.direction);
                 match self.layout.direction {
                     LayoutDirection::Row => {
-                        accumulated_position.0 += child_width + self.layout.spacing;
+                        accumulated_position.0 += child_node.layout.width + self.layout.spacing;
                     }
                     LayoutDirection::Column => {
-                        accumulated_position.1 += child_height + self.layout.spacing;
+                        accumulated_position.1 += child_node.layout.height + self.layout.spacing;
                     }
                 };
-                Some(child_node.position_pass(start_position, self.layout.direction))
+                Some(child_node.position_pass(start_position))
             })
             .collect();
 
-        let x = parent_position.0;
-        let y = parent_position.1;
+        let (x, y) = parent_position;
 
-        let xy_size = self.layout.xy_size(parent_direction);
         Node {
-            layout: CalculatedLayout::test(x, y, xy_size.0, xy_size.1),
+            layout: CalculatedLayout::test(x, y, self.layout.width, self.layout.height),
             children: new_children,
             element: self.element,
         }

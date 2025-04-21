@@ -21,8 +21,8 @@ impl Node<Layout> {
             .border_color(crate::palette::BLUE_LIGHT);
         Self {
             layout: Layout {
-                cross_length: Length::Fixed(height as u32),
-                flow_length: Length::Fixed(width as u32),
+                width: Length::Fixed(width as u32),
+                height: Length::Fixed(height as u32),
                 //TODO: create an API that automatically keeps quad border thickness and padding in
                 //sync
                 padding: 1.into(),
@@ -42,21 +42,21 @@ impl Node<Layout> {
         }
     }
 
-    pub fn flow_length(self, width: Length) -> Self {
+    pub fn width(self, width: Length) -> Self {
         // TODO make Length implement from u32
         Self {
             layout: Layout {
-                flow_length: width,
+                width,
                 ..self.layout
             },
             ..self
         }
     }
 
-    pub fn cross_length(self, height: Length) -> Self {
+    pub fn height(self, height: Length) -> Self {
         Self {
             layout: Layout {
-                cross_length: height,
+                height,
                 ..self.layout
             },
             ..self

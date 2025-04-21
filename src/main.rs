@@ -45,8 +45,8 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(BLUE_DARK),
     )
-    .flow_length(Length::Grow)
-    .cross_length(Length::Fixed(50))
+    .height(Length::Grow)
+    .width(Length::Fixed(50))
     .column()
     .padding(4)
     .spacing(2);
@@ -57,11 +57,11 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(RED_DARK),
     )
-    .flow_length(Length::Grow)
-    .cross_length(Length::Grow)
+    .width(Length::Grow)
+    .height(Length::Grow)
     .spacing(10)
     .padding(4)
-    .row();
+    .column();
 
     let a = Node::new(
         Quad::new()
@@ -69,19 +69,41 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(RED_DARK),
     )
-    .flow_length(Length::Fixed(60))
-    .cross_length(Length::Fixed(30))
+    .width(Length::Grow)
+    .height(Length::Fixed(30))
     .row();
 
-    let b = Node::new(
+    let mut b = Node::new(
         Quad::new()
             .fill(BLUE_LIGHT)
             .border_thickness(2)
             .border_color(BLUE_DARK),
     )
-    .flow_length(Length::Fixed(30))
-    .cross_length(Length::Fixed(60))
+    .width(Length::Grow)
+    .height(Length::Fixed(60))
+    .padding(4)
+    .spacing(10)
     .row();
+
+    let b_child = || {
+        Node::new(
+            Quad::new()
+                .fill(MAIN_LIGHT)
+                .border_thickness(1)
+                .border_color(BLUE_DARK),
+        )
+        .height(Length::Grow)
+        .width(Length::Fixed(10))
+        .row()
+    };
+
+    b.push(b_child());
+    b.push(b_child());
+    b.push(b_child());
+    b.push(b_child().width(Length::Grow));
+    b.push(b_child());
+    b.push(b_child());
+    b.push(b_child());
 
     let c = Node::new(
         Quad::new()
@@ -89,19 +111,26 @@ fn build_ui_tree() -> Node<Layout> {
             .border_thickness(2)
             .border_color(RED_LIGHT),
     )
-    .flow_length(Length::Fixed(60))
-    .cross_length(Length::Fixed(30))
+    .width(Length::Grow)
+    .height(Length::Fixed(30))
     .row();
+
+    let spacer = || {
+        Node::new(Quad::new().border_thickness(0))
+            .width(Length::Grow)
+            .height(Length::Grow)
+            .row()
+    };
 
     let menu_item = || {
         Node::new(
             Quad::new()
                 .fill(MAIN_LIGHT)
                 .border_thickness(1)
-                .border_color(BLUE_LIGHT),
+                .border_color(BLUE_DARK),
         )
-        .flow_length(Length::Fixed(30))
-        .cross_length(Length::Fixed(10))
+        .width(Length::Grow)
+        .height(Length::Fixed(10))
         .row()
     };
 
@@ -109,10 +138,12 @@ fn build_ui_tree() -> Node<Layout> {
     panel.push(menu_item());
     panel.push(menu_item());
     panel.push(menu_item());
+    panel.push(spacer());
     panel.push(menu_item());
 
     viewport.push(a);
     viewport.push(b);
+    viewport.push(spacer());
     viewport.push(c);
 
     root.push(panel);
