@@ -9,6 +9,12 @@ pub struct Text {
     pub content: String,
 }
 
+impl Text {
+    pub fn new(content: String) -> Self {
+        Self { content }
+    }
+}
+
 impl Element for Text {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
         let font = include_bytes!("resources/test_font.png");

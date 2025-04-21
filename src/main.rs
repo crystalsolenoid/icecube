@@ -97,10 +97,27 @@ fn build_ui_tree() -> Node<Layout> {
         .row()
     };
 
+    let menu_item = |label: &str| {
+        let mut container = Node::new(
+            Quad::new()
+                .fill(MAIN_LIGHT)
+                .border_thickness(1)
+                .border_color(BLUE_DARK),
+        )
+        .width(Length::Grow)
+        .height(Length::Fixed(12))
+        .padding(1)
+        .row();
+        container.push(Node::new(Text::new(label.into())));
+        container
+    };
+
     b.push(b_child());
     b.push(b_child());
     b.push(b_child());
-    b.push(b_child().width(Length::Grow));
+    b.push(
+        menu_item("A long piece of text that currently overflows its box...").width(Length::Grow),
+    );
     b.push(b_child());
     b.push(b_child());
     b.push(b_child());
@@ -122,24 +139,12 @@ fn build_ui_tree() -> Node<Layout> {
             .row()
     };
 
-    let menu_item = || {
-        Node::new(
-            Quad::new()
-                .fill(MAIN_LIGHT)
-                .border_thickness(1)
-                .border_color(BLUE_DARK),
-        )
-        .width(Length::Grow)
-        .height(Length::Fixed(10))
-        .row()
-    };
-
-    panel.push(menu_item());
-    panel.push(menu_item());
-    panel.push(menu_item());
-    panel.push(menu_item());
+    panel.push(menu_item("a"));
+    panel.push(menu_item("b"));
+    panel.push(menu_item("c - a long label"));
+    panel.push(menu_item("d"));
     panel.push(spacer());
-    panel.push(menu_item());
+    panel.push(menu_item("e"));
 
     viewport.push(a);
     viewport.push(b);
