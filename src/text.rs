@@ -36,12 +36,18 @@ impl Element for Text {
             .enumerate()
             .for_each(|(character_index, (x, y))| {
                 let (frame_x, frame_y) = (region.x, region.y);
+                let linear_progress = character_index as u32 * 6;
+                let usable_width = region.w.next_multiple_of(6) - 6;
+
+                let line_number = linear_progress / usable_width;
+                let column_number = linear_progress % usable_width;
+
+                let char_x = frame_x + column_number;
+                let char_y = frame_y + line_number * (8 + 1);
 
                 for j in 0..=7 {
                     for i in 0..=5 {
-                        let frame_index = 4
-                            * ((frame_y + j) * WIDTH + frame_x + i + (character_index as u32 * 6))
-                                as usize;
+                        let frame_index = 4 * ((char_y + j) * WIDTH + i + char_x) as usize;
 
                         let font_pixel = font[(x as u32 + i, y as u32 + j)];
 

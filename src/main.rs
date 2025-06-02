@@ -75,7 +75,7 @@ fn build_ui_tree() -> Node<Layout> {
 
     let mut b = Node::new(
         Quad::new()
-            .fill(BLUE_LIGHT)
+            .fill(MAIN_LIGHT)
             .border_thickness(2)
             .border_color(BLUE_DARK),
     )
