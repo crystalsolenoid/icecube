@@ -1,23 +1,18 @@
 use crate::tree::Node;
 
-#[derive(Clone, Copy, Default, Debug)]
-pub struct CalculatedLayout {
-    pub x: u32,
-    pub y: u32,
-    pub w: u32,
-    pub h: u32,
-}
+mod pipeline_types;
+pub use pipeline_types::{CalculatedLayout, Layout};
+use pipeline_types::{GrownLayout, ShrinkHeightLayout, ShrinkLayout};
 
-#[derive(Clone, Copy, Default)]
-pub struct Layout {
-    // about the node itself
-    pub width: Length,
-    pub height: Length,
-    // about its children
-    pub padding: Padding,
-    pub direction: LayoutDirection,
-    pub spacing: u32,
-}
+// advice from Clay https://www.youtube.com/watch?v=by9lQvpvMIc
+// fit sizing widths
+// grow and shrink sizing widths
+// wrap text
+// fit sizing heights
+// grow and shrink sizing heights
+// positions
+// draw commands
+
 #[derive(Clone, Copy)]
 struct FlowCross(u32, u32);
 #[derive(Clone, Copy)]
@@ -34,15 +29,6 @@ impl Layout {
     }
 }
 
-struct ShrinkLayout {
-    // about the node itself
-    pub width: ShrunkLength,
-    pub height: ShrunkLength,
-    // about its children
-    pub padding: Padding,
-    pub direction: LayoutDirection,
-    pub spacing: u32,
-}
 //TODO: generalize Layout, ShrinkLayout, and GrownLayout to avoid repetition
 impl ShrinkLayout {
     fn summed_padding(&self) -> FlowCross {
@@ -62,14 +48,25 @@ impl ShrinkLayout {
         }
     }
 }
-struct GrownLayout {
-    // about the node itself
-    pub width: GrownLength,
-    pub height: GrownLength,
-    // about its children
-    pub padding: Padding,
-    pub direction: LayoutDirection,
-    pub spacing: u32,
+
+//TODO: generalize Layout, ShrinkLayout, and GrownLayout to avoid repetition
+impl ShrinkHeightLayout {
+    fn summed_padding(&self) -> FlowCross {
+        let width = self.padding.left + self.padding.right;
+        let height = self.padding.top + self.padding.bottom;
+        match self.direction {
+            LayoutDirection::Column => FlowCross(height, width),
+            LayoutDirection::Row => FlowCross(width, height),
+        }
+    }
+
+    fn xy_to_flow_cross(&self, xy: XY) -> FlowCross {
+        let XY(x, y) = xy;
+        match self.direction {
+            LayoutDirection::Column => FlowCross(y, x),
+            LayoutDirection::Row => FlowCross(x, y),
+        }
+    }
 }
 
 #[derive(Clone, Copy, Default, PartialEq)]
