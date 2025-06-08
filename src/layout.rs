@@ -1,8 +1,13 @@
 use crate::tree::Node;
 
+mod length_types;
+mod padding;
 mod pipeline_types;
-pub use pipeline_types::{CalculatedLayout, Layout};
-use pipeline_types::{GrownLayout, ShrinkHeightLayout, ShrinkLayout};
+pub use length_types::Length;
+use length_types::{FlowCross, GrownLength, ShrunkLength, XY};
+pub use padding::Padding;
+pub use pipeline_types::{CalculatedLayout, Layout, LayoutDirection};
+use pipeline_types::{GrownLayout, ShrinkHeightLayout, ShrinkWidthLayout};
 
 // advice from Clay https://www.youtube.com/watch?v=by9lQvpvMIc
 // fit sizing widths
@@ -13,95 +18,6 @@ use pipeline_types::{GrownLayout, ShrinkHeightLayout, ShrinkLayout};
 // positions
 // draw commands
 
-#[derive(Clone, Copy)]
-struct FlowCross(u32, u32);
-#[derive(Clone, Copy)]
-struct XY(u32, u32);
-
-impl Layout {
-    fn summed_padding(&self) -> FlowCross {
-        let width = self.padding.left + self.padding.right;
-        let height = self.padding.top + self.padding.bottom;
-        match self.direction {
-            LayoutDirection::Column => FlowCross(height, width),
-            LayoutDirection::Row => FlowCross(width, height),
-        }
-    }
-}
-
-//TODO: generalize Layout, ShrinkLayout, and GrownLayout to avoid repetition
-impl ShrinkLayout {
-    fn summed_padding(&self) -> FlowCross {
-        let width = self.padding.left + self.padding.right;
-        let height = self.padding.top + self.padding.bottom;
-        match self.direction {
-            LayoutDirection::Column => FlowCross(height, width),
-            LayoutDirection::Row => FlowCross(width, height),
-        }
-    }
-
-    fn xy_to_flow_cross(&self, xy: XY) -> FlowCross {
-        let XY(x, y) = xy;
-        match self.direction {
-            LayoutDirection::Column => FlowCross(y, x),
-            LayoutDirection::Row => FlowCross(x, y),
-        }
-    }
-}
-
-//TODO: generalize Layout, ShrinkLayout, and GrownLayout to avoid repetition
-impl ShrinkHeightLayout {
-    fn summed_padding(&self) -> FlowCross {
-        let width = self.padding.left + self.padding.right;
-        let height = self.padding.top + self.padding.bottom;
-        match self.direction {
-            LayoutDirection::Column => FlowCross(height, width),
-            LayoutDirection::Row => FlowCross(width, height),
-        }
-    }
-
-    fn xy_to_flow_cross(&self, xy: XY) -> FlowCross {
-        let XY(x, y) = xy;
-        match self.direction {
-            LayoutDirection::Column => FlowCross(y, x),
-            LayoutDirection::Row => FlowCross(x, y),
-        }
-    }
-}
-
-#[derive(Clone, Copy, Default, PartialEq)]
-enum ShrunkLength {
-    #[default]
-    Grow,
-    Fixed(u32),
-}
-
-type GrownLength = u32;
-
-#[derive(Clone, Copy, Default)]
-pub enum Length {
-    #[default]
-    Grow,
-    Shrink,
-    Fixed(u32),
-}
-
-#[derive(Clone, Copy, Default, PartialEq)]
-pub enum LayoutDirection {
-    Column,
-    #[default]
-    Row,
-}
-
-#[derive(Clone, Copy, Default)]
-pub struct Padding {
-    pub top: u32,
-    pub right: u32,
-    pub bottom: u32,
-    pub left: u32,
-}
-
-//    fn layout_parameters(&self) -> LayoutParameters {
 impl Node<Layout> {
     pub fn calculate_layout(self) -> Node<CalculatedLayout> {
         // TODO: Use better types for root node, so we don't have to match for unsupported root
@@ -117,7 +33,7 @@ impl Node<Layout> {
 
     /// Render pass 1/3
     /// bottom-up pass
-    fn shrink_pass(self) -> Node<ShrinkLayout> {
+    fn shrink_pass(self) -> Node<ShrinkWidthLayout> {
         let new_children: Vec<_> = self.children.into_iter().map(|c| c.shrink_pass()).collect();
         let flow_cross_padding = self.layout.summed_padding();
         //TODO: calculate new values in this first match statement?
@@ -178,7 +94,7 @@ impl Node<Layout> {
             LayoutDirection::Row => (new_flow_length, new_cross_length),
         };
         Node {
-            layout: ShrinkLayout {
+            layout: ShrinkWidthLayout {
                 width: new_width,
                 height: new_height,
                 padding: self.layout.padding,
@@ -191,7 +107,7 @@ impl Node<Layout> {
     }
 }
 
-impl Node<ShrinkLayout> {
+impl Node<ShrinkWidthLayout> {
     /// Render pass 2/3
     /// top-down
     fn grow_pass(self, assigned_xy: XY) -> Node<GrownLayout> {
@@ -294,7 +210,7 @@ impl Node<GrownLayout> {
         let (x, y) = parent_position;
 
         Node {
-            layout: CalculatedLayout::test(x, y, self.layout.width, self.layout.height),
+            layout: CalculatedLayout::new(x, y, self.layout.width, self.layout.height),
             children: new_children,
             element: self.element,
         }
@@ -302,44 +218,11 @@ impl Node<GrownLayout> {
 }
 
 impl CalculatedLayout {
-    pub fn test(x: u32, y: u32, w: u32, h: u32) -> Self {
+    fn new(x: u32, y: u32, w: u32, h: u32) -> Self {
         Self { x, y, w, h }
     }
 
     pub fn contains(&self, pos: (u32, u32)) -> bool {
         pos.0 >= self.x && pos.0 < self.x + self.w && pos.1 >= self.y && pos.1 < self.y + self.h
-    }
-}
-
-impl From<u32> for Padding {
-    fn from(value: u32) -> Self {
-        Self {
-            top: value,
-            right: value,
-            bottom: value,
-            left: value,
-        }
-    }
-}
-
-impl From<[u32; 2]> for Padding {
-    fn from(value: [u32; 2]) -> Self {
-        Self {
-            top: value[0],
-            right: value[1],
-            bottom: value[0],
-            left: value[1],
-        }
-    }
-}
-
-impl From<[u32; 4]> for Padding {
-    fn from(value: [u32; 4]) -> Self {
-        Self {
-            top: value[0],
-            right: value[1],
-            bottom: value[2],
-            left: value[3],
-        }
     }
 }
