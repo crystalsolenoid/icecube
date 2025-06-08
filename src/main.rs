@@ -161,7 +161,7 @@ fn main() -> Result<(), Error> {
     let event_loop = EventLoop::new().unwrap();
     let mut input = WinitInputHelper::new();
     let window = {
-        let size = LogicalSize::new(WIDTH as f64, HEIGHT as f64);
+        let size = LogicalSize::new(2.0 * WIDTH as f64, 2.0 * HEIGHT as f64);
         WindowBuilder::new()
             .with_title("Hello Pixels")
             .with_inner_size(size)
