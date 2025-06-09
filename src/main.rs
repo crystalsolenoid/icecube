@@ -60,7 +60,7 @@ fn build_ui_tree() -> Node<Layout> {
     .width(Length::Grow)
     .height(Length::Grow)
     .spacing(10)
-    .padding(4)
+    .padding([4, 10])
     .column();
 
     let a = Node::new(

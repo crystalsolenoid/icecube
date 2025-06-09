@@ -41,65 +41,89 @@ impl Node<Layout> {
             .map(|c| c.shrink_width_pass())
             .collect();
         let flow_cross_padding = self.layout.summed_padding();
-        //TODO: calculate new values in this first match statement?
-        let (flow_length, cross_length) = match self.layout.direction {
-            LayoutDirection::Column => (self.layout.height, self.layout.width),
-            LayoutDirection::Row => (self.layout.width, self.layout.height),
-        };
 
-        //// Flow
-        let new_flow_length = match flow_length {
-            Length::Shrink => {
-                let l: u32 = new_children
-                    .iter()
-                    .map(|child| match self.layout.direction {
-                        LayoutDirection::Column => match child.layout.height {
-                            Length::Shrink => 0, // TODO: What value should this be?
-                            Length::Grow => 0,
-                            Length::Fixed(l) => l,
-                        },
-                        LayoutDirection::Row => match child.layout.width {
-                            ShrunkLength::Grow => 0,
-                            ShrunkLength::Fixed(l) => l,
-                        },
-                    })
-                    .sum();
-                let total_spacing =
-                    new_children.len().saturating_sub(1) as u32 * self.layout.spacing;
-                ShrunkLength::Fixed(l + flow_cross_padding.0 + total_spacing)
-            }
+        let new_children_widths = new_children.iter().map(|child| match child.layout.width {
+            ShrunkLength::Grow => 0,
+            ShrunkLength::Fixed(l) => l,
+        });
+        let new_width = match self.layout.width {
             Length::Grow => ShrunkLength::Grow,
             Length::Fixed(l) => ShrunkLength::Fixed(l),
+            Length::Shrink => match self.layout.direction {
+                LayoutDirection::Row => {
+                    // Sum heights of children
+                    let l: u32 = new_children_widths.sum();
+                    let total_spacing =
+                        new_children.len().saturating_sub(1) as u32 * self.layout.spacing;
+                    ShrunkLength::Fixed(l + flow_cross_padding.0 + total_spacing)
+                }
+                LayoutDirection::Column => {
+                    // Get max child height
+                    let max_child_cross_length: u32 = new_children_widths.max().unwrap_or(0);
+                    ShrunkLength::Fixed(max_child_cross_length + flow_cross_padding.1)
+                }
+            },
         };
 
-        //// Cross
-        let new_cross_length = match cross_length {
-            Length::Shrink => {
-                let max_child_cross_length: u32 = new_children
-                    .iter()
-                    .map(|child| match self.layout.direction {
-                        LayoutDirection::Column => match child.layout.width {
-                            ShrunkLength::Grow => 0,
-                            ShrunkLength::Fixed(l) => l,
-                        },
-                        LayoutDirection::Row => match child.layout.height {
-                            Length::Shrink => 0, // TODO: What value should this be?
-                            Length::Grow => 0,
-                            Length::Fixed(l) => l,
-                        },
-                    })
-                    .max()
-                    .unwrap_or(0);
-                ShrunkLength::Fixed(max_child_cross_length + flow_cross_padding.1)
-            }
-            Length::Grow => ShrunkLength::Grow,
-            Length::Fixed(l) => ShrunkLength::Fixed(l),
-        };
-
-        let (new_width, new_height) = match self.layout.direction {
-            LayoutDirection::Column => (new_cross_length, new_flow_length),
-            LayoutDirection::Row => (new_flow_length, new_cross_length),
-        };
+        // // //TODO: calculate new values in this first match statement?
+        // let (flow_length, cross_length) = match self.layout.direction {
+        //     LayoutDirection::Column => (self.layout.height, self.layout.width),
+        //     LayoutDirection::Row => (self.layout.width, self.layout.height),
+        // };
+        //
+        // //// Flow
+        // let new_flow_length = match flow_length {
+        //     Length::Shrink => {
+        //         let l: u32 = new_children
+        //             .iter()
+        //             .map(|child| match self.layout.direction {
+        //                 LayoutDirection::Column => match child.layout.height {
+        //                     Length::Shrink => 0, // TODO: What value should this be?
+        //                     Length::Grow => 0,
+        //                     Length::Fixed(l) => l,
+        //                 },
+        //                 LayoutDirection::Row => match child.layout.width {
+        //                     ShrunkLength::Grow => 0,
+        //                     ShrunkLength::Fixed(l) => l,
+        //                 },
+        //             })
+        //             .sum();
+        //         let total_spacing =
+        //             new_children.len().saturating_sub(1) as u32 * self.layout.spacing;
+        //         ShrunkLength::Fixed(l + flow_cross_padding.0 + total_spacing)
+        //     }
+        //     Length::Grow => ShrunkLength::Grow,
+        //     Length::Fixed(l) => ShrunkLength::Fixed(l),
+        // };
+        //
+        // //// Cross
+        // let new_cross_length = match cross_length {
+        //     Length::Shrink => {
+        //         let max_child_cross_length: u32 = new_children
+        //             .iter()
+        //             .map(|child| match self.layout.direction {
+        //                 LayoutDirection::Column => match child.layout.width {
+        //                     ShrunkLength::Grow => 0,
+        //                     ShrunkLength::Fixed(l) => l,
+        //                 },
+        //                 LayoutDirection::Row => match child.layout.height {
+        //                     Length::Shrink => 0, // TODO: What value should this be?
+        //                     Length::Grow => 0,
+        //                     Length::Fixed(l) => l,
+        //                 },
+        //             })
+        //             .max()
+        //             .unwrap_or(0);
+        //         ShrunkLength::Fixed(max_child_cross_length + flow_cross_padding.1)
+        //     }
+        //     Length::Grow => ShrunkLength::Grow,
+        //     Length::Fixed(l) => ShrunkLength::Fixed(l),
+        // };
+        //
+        // let (new_width, new_height) = match self.layout.direction {
+        //     LayoutDirection::Column => (new_cross_length, new_flow_length),
+        //     LayoutDirection::Row => (new_flow_length, new_cross_length),
+        // };
         Node {
             layout: ShrinkWidthLayout {
                 width: new_width,
@@ -123,59 +147,32 @@ impl Node<ShrinkWidthLayout> {
             .into_iter()
             .map(|c| c.shrink_height_pass())
             .collect();
+
         let flow_cross_padding = self.layout.summed_padding();
-        //TODO: calculate new values in this first match statement?
-        let new_height = match self.layout.direction {
-            LayoutDirection::Column => match self.layout.height {
-                Length::Shrink => {
-                    let l: u32 = new_children
-                        .iter()
-                        .map(|child| match self.layout.direction {
-                            //TODO: get rid of
-                            //unreachable match
-                            LayoutDirection::Column => match child.layout.height {
-                                ShrunkLength::Grow => 0,
-                                ShrunkLength::Fixed(l) => l,
-                            },
-                            LayoutDirection::Row => match child.layout.width {
-                                ShrunkLength::Grow => 0,
-                                ShrunkLength::Fixed(l) => l,
-                            },
-                        })
-                        .sum();
+
+        let new_children_heights = new_children.iter().map(|child| match child.layout.height {
+            ShrunkLength::Grow => 0,
+            ShrunkLength::Fixed(l) => l,
+        });
+        let new_height = match self.layout.height {
+            Length::Grow => ShrunkLength::Grow,
+            Length::Fixed(l) => ShrunkLength::Fixed(l),
+            Length::Shrink => match self.layout.direction {
+                LayoutDirection::Column => {
+                    // Sum heights of children
+                    let l: u32 = new_children_heights.sum();
                     let total_spacing =
                         new_children.len().saturating_sub(1) as u32 * self.layout.spacing;
                     ShrunkLength::Fixed(l + flow_cross_padding.0 + total_spacing)
                 }
-                Length::Grow => ShrunkLength::Grow,
-                Length::Fixed(l) => ShrunkLength::Fixed(l),
-            }, //(self.layout.height, self.layout.width),
-            LayoutDirection::Row => {
-                match self.layout.height {
-                    Length::Shrink => {
-                        let max_child_cross_length: u32 = new_children
-                            .iter()
-                            .map(|child| match self.layout.direction {
-                                //TODO: get rid of
-                                //unreachable match
-                                LayoutDirection::Column => match child.layout.width {
-                                    ShrunkLength::Grow => 0,
-                                    ShrunkLength::Fixed(l) => l,
-                                },
-                                LayoutDirection::Row => match child.layout.height {
-                                    ShrunkLength::Grow => 0,
-                                    ShrunkLength::Fixed(l) => l,
-                                },
-                            })
-                            .max()
-                            .unwrap_or(0);
-                        ShrunkLength::Fixed(max_child_cross_length + flow_cross_padding.1)
-                    }
-                    Length::Grow => ShrunkLength::Grow,
-                    Length::Fixed(l) => ShrunkLength::Fixed(l),
-                } //(self.layout.width, self.layout.height),
-            }
+                LayoutDirection::Row => {
+                    // Get max child height
+                    let max_child_cross_length: u32 = new_children_heights.max().unwrap_or(0);
+                    ShrunkLength::Fixed(max_child_cross_length + flow_cross_padding.1)
+                }
+            },
         };
+
         Node {
             layout: ShrinkHeightLayout {
                 width: self.layout.width,
