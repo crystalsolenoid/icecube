@@ -1,5 +1,5 @@
 use super::{
-    length_types::{FlowCross, GrownLength, Length, ShrunkLength, XY},
+    length_types::{FlowCross, GrownLength, Length, ShrunkLength},
     Padding,
 };
 
@@ -34,13 +34,6 @@ impl<W, H> LayoutTemplate<W, H> {
         match self.direction {
             LayoutDirection::Column => FlowCross(height, width),
             LayoutDirection::Row => FlowCross(width, height),
-        }
-    }
-    pub(super) fn xy_to_flow_cross(&self, xy: XY) -> FlowCross {
-        let XY(x, y) = xy;
-        match self.direction {
-            LayoutDirection::Column => FlowCross(y, x),
-            LayoutDirection::Row => FlowCross(x, y),
         }
     }
 }
