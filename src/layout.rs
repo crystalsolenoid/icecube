@@ -26,15 +26,20 @@ impl Node<Layout> {
             (Length::Fixed(w), Length::Fixed(h)) => XY(w, h),
             (_, _) => panic!(),
         };
-        self.shrink_pass()
+        self.shrink_width_pass()
+            .shrink_height_pass()
             .grow_pass(root_size)
             .position_pass((0, 0))
     }
 
     /// Render pass 1/3
     /// bottom-up pass
-    fn shrink_pass(self) -> Node<ShrinkWidthLayout> {
-        let new_children: Vec<_> = self.children.into_iter().map(|c| c.shrink_pass()).collect();
+    fn shrink_width_pass(self) -> Node<ShrinkWidthLayout> {
+        let new_children: Vec<_> = self
+            .children
+            .into_iter()
+            .map(|c| c.shrink_width_pass())
+            .collect();
         let flow_cross_padding = self.layout.summed_padding();
         //TODO: calculate new values in this first match statement?
         let (flow_length, cross_length) = match self.layout.direction {
@@ -49,8 +54,9 @@ impl Node<Layout> {
                     .iter()
                     .map(|child| match self.layout.direction {
                         LayoutDirection::Column => match child.layout.height {
-                            ShrunkLength::Grow => 0,
-                            ShrunkLength::Fixed(l) => l,
+                            Length::Shrink => 0, // TODO: What value should this be?
+                            Length::Grow => 0,
+                            Length::Fixed(l) => l,
                         },
                         LayoutDirection::Row => match child.layout.width {
                             ShrunkLength::Grow => 0,
@@ -77,8 +83,9 @@ impl Node<Layout> {
                             ShrunkLength::Fixed(l) => l,
                         },
                         LayoutDirection::Row => match child.layout.height {
-                            ShrunkLength::Grow => 0,
-                            ShrunkLength::Fixed(l) => l,
+                            Length::Shrink => 0, // TODO: What value should this be?
+                            Length::Grow => 0,
+                            Length::Fixed(l) => l,
                         },
                     })
                     .max()
@@ -96,7 +103,7 @@ impl Node<Layout> {
         Node {
             layout: ShrinkWidthLayout {
                 width: new_width,
-                height: new_height,
+                height: self.layout.height, // keep old height
                 padding: self.layout.padding,
                 direction: self.layout.direction,
                 spacing: self.layout.spacing,
@@ -108,6 +115,82 @@ impl Node<Layout> {
 }
 
 impl Node<ShrinkWidthLayout> {
+    /// Render pass 1/3
+    /// bottom-up pass
+    fn shrink_height_pass(self) -> Node<ShrinkHeightLayout> {
+        let new_children: Vec<_> = self
+            .children
+            .into_iter()
+            .map(|c| c.shrink_height_pass())
+            .collect();
+        let flow_cross_padding = self.layout.summed_padding();
+        //TODO: calculate new values in this first match statement?
+        let new_height = match self.layout.direction {
+            LayoutDirection::Column => match self.layout.height {
+                Length::Shrink => {
+                    let l: u32 = new_children
+                        .iter()
+                        .map(|child| match self.layout.direction {
+                            //TODO: get rid of
+                            //unreachable match
+                            LayoutDirection::Column => match child.layout.height {
+                                ShrunkLength::Grow => 0,
+                                ShrunkLength::Fixed(l) => l,
+                            },
+                            LayoutDirection::Row => match child.layout.width {
+                                ShrunkLength::Grow => 0,
+                                ShrunkLength::Fixed(l) => l,
+                            },
+                        })
+                        .sum();
+                    let total_spacing =
+                        new_children.len().saturating_sub(1) as u32 * self.layout.spacing;
+                    ShrunkLength::Fixed(l + flow_cross_padding.0 + total_spacing)
+                }
+                Length::Grow => ShrunkLength::Grow,
+                Length::Fixed(l) => ShrunkLength::Fixed(l),
+            }, //(self.layout.height, self.layout.width),
+            LayoutDirection::Row => {
+                match self.layout.height {
+                    Length::Shrink => {
+                        let max_child_cross_length: u32 = new_children
+                            .iter()
+                            .map(|child| match self.layout.direction {
+                                //TODO: get rid of
+                                //unreachable match
+                                LayoutDirection::Column => match child.layout.width {
+                                    ShrunkLength::Grow => 0,
+                                    ShrunkLength::Fixed(l) => l,
+                                },
+                                LayoutDirection::Row => match child.layout.height {
+                                    ShrunkLength::Grow => 0,
+                                    ShrunkLength::Fixed(l) => l,
+                                },
+                            })
+                            .max()
+                            .unwrap_or(0);
+                        ShrunkLength::Fixed(max_child_cross_length + flow_cross_padding.1)
+                    }
+                    Length::Grow => ShrunkLength::Grow,
+                    Length::Fixed(l) => ShrunkLength::Fixed(l),
+                } //(self.layout.width, self.layout.height),
+            }
+        };
+        Node {
+            layout: ShrinkHeightLayout {
+                width: self.layout.width,
+                height: new_height,
+                padding: self.layout.padding,
+                direction: self.layout.direction,
+                spacing: self.layout.spacing,
+            },
+            children: new_children,
+            element: self.element,
+        }
+    }
+}
+
+impl Node<ShrinkHeightLayout> {
     /// Render pass 2/3
     /// top-down
     fn grow_pass(self, assigned_xy: XY) -> Node<GrownLayout> {
