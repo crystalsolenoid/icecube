@@ -28,7 +28,7 @@ impl Node<Layout> {
         };
         self.shrink_width_pass()
             .grow_width_pass(root_size.0)
-            // then wrap
+            .wrap()
             .shrink_height_pass()
             .grow_height_pass(root_size.1)
             .position_pass((0, 0))
@@ -87,6 +87,30 @@ impl Node<Layout> {
 }
 
 impl Node<GrownWidthLayout> {
+    fn wrap(self) -> Self {
+        let height = match self.element.wrap(self.layout.width) {
+            Some(h) => Length::Fixed(h),
+            None => self.layout.height,
+        };
+
+        let new_children: Vec<_> = self.children.into_iter().map(|c| c.wrap()).collect();
+
+        // TODO we're starting with making every text element have a fixed height that's its
+        // minimum height after wrapping.
+
+        Node {
+            layout: GrownWidthLayout {
+                width: self.layout.width,
+                height,
+                padding: self.layout.padding,
+                direction: self.layout.direction,
+                spacing: self.layout.spacing,
+            },
+            children: new_children,
+            element: self.element,
+        }
+    }
+
     /// Render pass 1/3
     /// bottom-up pass
     fn shrink_height_pass(self) -> Node<ShrinkHeightLayout> {

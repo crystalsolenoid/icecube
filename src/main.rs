@@ -23,6 +23,88 @@ use icecube::tree::Node;
 const WIDTH: u32 = 320;
 const HEIGHT: u32 = 240;
 
+fn _build_ui_tree_simpler() -> Node<Layout> {
+    let mut root = Node::root_node(WIDTH as usize, HEIGHT as usize).row(); // TODO figure out how we want to
+                                                                           // handle coordinate types everywhere
+                                                                           // usize vs u32
+
+    let mut viewport = Node::new(
+        Quad::new()
+            .fill(MAIN_LIGHT)
+            .border_thickness(2)
+            .border_color(RED_DARK),
+    )
+    .width(Length::Grow)
+    .height(Length::Grow)
+    .spacing(10)
+    .padding([4, 10])
+    .column();
+
+    let mut b = Node::new(
+        Quad::new()
+            .fill(MAIN_LIGHT)
+            .border_thickness(2)
+            .border_color(BLUE_DARK),
+    )
+    .width(Length::Grow)
+    .height(Length::Fixed(60))
+    .padding(4)
+    .spacing(10)
+    .row();
+
+    let b_child = || {
+        Node::new(
+            Quad::new()
+                .fill(MAIN_LIGHT)
+                .border_thickness(1)
+                .border_color(BLUE_DARK),
+        )
+        .height(Length::Grow)
+        .width(Length::Fixed(10))
+        .row()
+    };
+
+    let menu_item = |label: &str| {
+        let mut container = Node::new(
+            Quad::new()
+                .fill(MAIN_LIGHT)
+                .border_thickness(1)
+                .border_color(BLUE_DARK),
+        )
+        .width(Length::Grow)
+        .height(Length::Shrink)
+        .padding(1)
+        .row();
+        container.push(Node::new(Text::new(label.into())));
+        container
+    };
+
+    b.push(b_child());
+    b.push(
+        menu_item("A long piece of text that currently overflows its box...").width(Length::Grow),
+    );
+    b.push(b_child());
+    b.push(b_child());
+    b.push(b_child());
+    b.push(b_child());
+    b.push(b_child());
+    b.push(b_child());
+
+    let spacer = || {
+        Node::new(Quad::new().border_thickness(0))
+            .width(Length::Grow)
+            .height(Length::Grow)
+            .row()
+    };
+
+    viewport.push(b);
+    //    viewport.push(spacer());
+
+    //    root.push(panel);
+    root.push(viewport);
+    root
+}
+
 // TODO can we specify a generic default for Node for a nicer API?
 fn build_ui_tree() -> Node<Layout> {
     /*
@@ -105,7 +187,7 @@ fn build_ui_tree() -> Node<Layout> {
                 .border_color(BLUE_DARK),
         )
         .width(Length::Grow)
-        .height(Length::Fixed(12))
+        .height(Length::Shrink)
         .padding(1)
         .row();
         container.push(Node::new(Text::new(label.into())));

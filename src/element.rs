@@ -7,4 +7,9 @@ pub trait Element {
         // TODO this was for quick compiling. Do we still want it long-term?
         Layout::default()
     }
+    /// Wrappable elements (maybe only text?) will return the height when wrapped at the given
+    /// width.
+    fn wrap(&self, _width: u32) -> Option<u32> {
+        None
+    }
 }
