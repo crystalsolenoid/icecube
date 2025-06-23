@@ -23,8 +23,8 @@ pub enum LayoutDirection {
 
 pub type Layout = LayoutTemplate<Length, Length>;
 pub type ShrinkWidthLayout = LayoutTemplate<ShrunkLength, Length>;
-pub type ShrinkHeightLayout = LayoutTemplate<ShrunkLength, ShrunkLength>;
-pub type GrownWidthLayout = LayoutTemplate<GrownLength, ShrunkLength>;
+pub type GrownWidthLayout = LayoutTemplate<GrownLength, Length>;
+pub type ShrinkHeightLayout = LayoutTemplate<GrownLength, ShrunkLength>;
 pub type GrownHeightLayout = LayoutTemplate<GrownLength, GrownLength>;
 
 impl<W, H> LayoutTemplate<W, H> {

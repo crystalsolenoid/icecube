@@ -27,8 +27,9 @@ impl Node<Layout> {
             (_, _) => panic!(),
         };
         self.shrink_width_pass()
-            .shrink_height_pass()
             .grow_width_pass(root_size.0)
+            // then wrap
+            .shrink_height_pass()
             .grow_height_pass(root_size.1)
             .position_pass((0, 0))
     }
@@ -85,7 +86,7 @@ impl Node<Layout> {
     }
 }
 
-impl Node<ShrinkWidthLayout> {
+impl Node<GrownWidthLayout> {
     /// Render pass 1/3
     /// bottom-up pass
     fn shrink_height_pass(self) -> Node<ShrinkHeightLayout> {
@@ -138,7 +139,7 @@ impl Node<ShrinkWidthLayout> {
     }
 }
 
-impl Node<ShrinkHeightLayout> {
+impl Node<ShrinkWidthLayout> {
     /// Render pass 2/3
     /// top-down
     fn grow_width_pass(self, assigned_width: GrownLength) -> Node<GrownWidthLayout> {
@@ -208,7 +209,7 @@ impl Node<ShrinkHeightLayout> {
     }
 }
 
-impl Node<GrownWidthLayout> {
+impl Node<ShrinkHeightLayout> {
     /// Render pass 2/3
     /// top-down
     fn grow_height_pass(self, assigned_height: GrownLength) -> Node<GrownHeightLayout> {
