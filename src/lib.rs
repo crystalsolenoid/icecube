@@ -1,5 +1,7 @@
+pub mod buffer;
 pub mod button;
 pub mod element;
+pub mod font;
 pub mod layout;
 pub mod palette;
 pub mod quad;

@@ -90,13 +90,6 @@ fn _build_ui_tree_simpler() -> Node<Layout> {
     b.push(b_child());
     b.push(b_child());
 
-    let spacer = || {
-        Node::new(Quad::new().border_thickness(0))
-            .width(Length::Grow)
-            .height(Length::Grow)
-            .row()
-    };
-
     viewport.push(b);
     //    viewport.push(spacer());
 
@@ -226,7 +219,7 @@ fn build_ui_tree() -> Node<Layout> {
     panel.push(menu_item("c - a long label"));
     panel.push(menu_item("d"));
     panel.push(spacer());
-    panel.push(menu_item("e"));
+    panel.push(menu_item("這"));
 
     viewport.push(a);
     viewport.push(b);
