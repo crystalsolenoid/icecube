@@ -2,7 +2,7 @@ use std::sync::LazyLock;
 
 use crate::buffer::Buffer;
 use crate::element::Element;
-use crate::font::{Font, ImageFont, TEST_FONT};
+use crate::font::{Font, FontType, ImageFont, TEST_FONT, TEST_FONT2};
 use crate::layout::CalculatedLayout;
 
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
@@ -10,12 +10,15 @@ const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
 #[derive(Clone)]
 pub struct Text {
     pub content: String,
-    // pub font: LazyLock<Box<dyn Font>>,
+    pub font: FontType,
 }
 
 impl Text {
     pub fn new(content: String) -> Self {
-        Self { content }
+        Self {
+            content,
+            font: FontType::Image(&*TEST_FONT2),
+        }
     }
 
     fn usable_width(width: u32) -> u32 {
@@ -25,7 +28,7 @@ impl Text {
 
 impl Element for Text {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
-        let font = &*TEST_FONT;
+        let font = &self.font;
 
         self.content
             .chars()

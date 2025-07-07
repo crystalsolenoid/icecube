@@ -5,6 +5,41 @@ use image::{ImageBuffer, Luma};
 use crate::{buffer::Buffer, palette::BLUE_LIGHT};
 
 pub static TEST_FONT: LazyLock<ImageFont> = std::sync::LazyLock::new(|| ImageFont::test_font());
+pub static TEST_FONT2: LazyLock<ImageFont> = std::sync::LazyLock::new(|| ImageFont::mono_5_8());
+
+#[derive(Clone)]
+pub enum FontType {
+    Image(&'static ImageFont),
+}
+
+impl Font for FontType {
+    fn draw_character(
+        &self,
+        buffer: &mut Buffer,
+        screen_x: usize,
+        screen_y: usize,
+        character: char,
+    ) {
+        match self {
+            Self::Image(f) => f.draw_character(buffer, screen_x, screen_y, character),
+        }
+    }
+    fn width(&self) -> usize {
+        match self {
+            Self::Image(f) => f.width(),
+        }
+    }
+    fn height(&self) -> usize {
+        match self {
+            Self::Image(f) => f.height(),
+        }
+    }
+    fn fallback_character(&self) -> char {
+        match self {
+            Self::Image(f) => f.fallback_character(),
+        }
+    }
+}
 
 pub struct ImageFont {
     font_image: ImageBuffer<Luma<u8>, Vec<u8>>,
@@ -64,7 +99,7 @@ impl Font for ImageFont {
     fn height(&self) -> usize {
         self.character_height
     }
-    fn fallback_character() -> char {
+    fn fallback_character(&self) -> char {
         '?'
     }
 
@@ -78,7 +113,7 @@ impl Font for ImageFont {
         let index = match character {
             ' ' => return,
             c if self.first_char <= c as u8 && self.last_char >= c as u8 => c,
-            _ => Self::fallback_character(),
+            _ => self.fallback_character(),
         } as u8
             - self.first_char;
 
@@ -120,5 +155,5 @@ pub trait Font {
     );
     fn width(&self) -> usize;
     fn height(&self) -> usize;
-    fn fallback_character() -> char;
+    fn fallback_character(&self) -> char;
 }
