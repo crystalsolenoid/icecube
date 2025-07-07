@@ -10,19 +10,24 @@ const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
 #[derive(Clone)]
 pub struct Text {
     pub content: String,
-    pub font: FontType,
+    pub font: &'static LazyLock<FontType>,
+    //pub font: &'static FontType,
 }
 
 impl Text {
     pub fn new(content: String) -> Self {
         Self {
             content,
-            font: FontType::Image(&*TEST_FONT2),
+            font: &TEST_FONT2,
         }
     }
 
     fn usable_width(width: u32) -> u32 {
         width.next_multiple_of(6) - 6
+    }
+
+    pub fn with_font(self, font: &'static LazyLock<FontType>) -> Self {
+        Self { font, ..self }
     }
 }
 

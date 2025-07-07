@@ -4,9 +4,6 @@
 
 use error_iter::ErrorIter as _;
 
-use icecube::button::Button;
-use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_DARK, MAIN_LIGHT, RED_DARK, RED_LIGHT};
-use icecube::text::Text;
 use log::error;
 use pixels::{wgpu, Error, Pixels, SurfaceTexture};
 use winit::dpi::{LogicalSize, PhysicalPosition};
@@ -16,13 +13,18 @@ use winit::keyboard::KeyCode;
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 
+use icecube::button::Button;
+use icecube::font::{TEST_FONT, TEST_FONT2};
 use icecube::layout::{CalculatedLayout, Layout, Length};
+use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_DARK, MAIN_LIGHT, RED_DARK, RED_LIGHT};
 use icecube::quad::{BorderStyle, Quad, QuadStyle};
+use icecube::text::Text;
 use icecube::tree::Node;
 
 const WIDTH: u32 = 320;
 const HEIGHT: u32 = 240;
 
+/*
 fn _build_ui_tree_simpler() -> Node<Layout> {
     let mut root = Node::root_node(WIDTH as usize, HEIGHT as usize).row(); // TODO figure out how we want to
                                                                            // handle coordinate types everywhere
@@ -64,7 +66,7 @@ fn _build_ui_tree_simpler() -> Node<Layout> {
         .row()
     };
 
-    let menu_item = |label: &str| {
+    let menu_item = |label: &str, font| {
         let mut container = Node::new(
             Quad::new()
                 .fill(MAIN_LIGHT)
@@ -75,13 +77,17 @@ fn _build_ui_tree_simpler() -> Node<Layout> {
         .height(Length::Shrink)
         .padding(1)
         .row();
-        container.push(Node::new(Text::new(label.into())));
+        container.push(Node::new(Text::new(label.into()).with_font(font)));
         container
     };
 
     b.push(b_child());
     b.push(
-        menu_item("A long piece of text that currently overflows its box...").width(Length::Grow),
+        menu_item(
+            "A long piece of text that currently overflows its box...",
+            &TEST_FONT,
+        )
+        .width(Length::Grow),
     );
     b.push(b_child());
     b.push(b_child());
@@ -97,6 +103,7 @@ fn _build_ui_tree_simpler() -> Node<Layout> {
     root.push(viewport);
     root
 }
+*/
 
 // TODO can we specify a generic default for Node for a nicer API?
 fn build_ui_tree() -> Node<Layout> {
@@ -172,7 +179,7 @@ fn build_ui_tree() -> Node<Layout> {
         .row()
     };
 
-    let menu_item = |label: &str| {
+    let menu_item = |label: &str, font| {
         let mut container = Node::new(
             Quad::new()
                 .fill(MAIN_LIGHT)
@@ -183,7 +190,7 @@ fn build_ui_tree() -> Node<Layout> {
         .height(Length::Shrink)
         .padding(1)
         .row();
-        container.push(Node::new(Text::new(label.into())));
+        container.push(Node::new(Text::new(label.into()).with_font(font)));
         container
     };
 
@@ -191,7 +198,11 @@ fn build_ui_tree() -> Node<Layout> {
     b.push(b_child());
     b.push(b_child());
     b.push(
-        menu_item("A long piece of text that currently overflows its box...").width(Length::Grow),
+        menu_item(
+            "A long piece of text that currently overflows its box...",
+            &TEST_FONT,
+        )
+        .width(Length::Grow),
     );
     b.push(b_child());
     b.push(b_child());
@@ -214,12 +225,14 @@ fn build_ui_tree() -> Node<Layout> {
             .row()
     };
 
-    panel.push(menu_item("a"));
-    panel.push(menu_item("b"));
-    panel.push(menu_item("c - a long label"));
-    panel.push(menu_item("d"));
+    panel.push(menu_item("a", &TEST_FONT2));
+    //    panel.push(menu_item("a", builtin_fonts::TEST_FONT)); // TODO
+    //    panel.push(menu_item("a", FontType::Image(wiftnywfutn)));
+    panel.push(menu_item("b", &TEST_FONT2));
+    panel.push(menu_item("c - a long label", &TEST_FONT2));
+    panel.push(menu_item("d", &TEST_FONT2));
     panel.push(spacer());
-    panel.push(menu_item("這"));
+    panel.push(menu_item("這", &TEST_FONT2));
 
     viewport.push(a);
     viewport.push(b);

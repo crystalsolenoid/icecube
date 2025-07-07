@@ -4,12 +4,17 @@ use image::{ImageBuffer, Luma};
 
 use crate::{buffer::Buffer, palette::BLUE_LIGHT};
 
-pub static TEST_FONT: LazyLock<ImageFont> = std::sync::LazyLock::new(|| ImageFont::test_font());
-pub static TEST_FONT2: LazyLock<ImageFont> = std::sync::LazyLock::new(|| ImageFont::mono_5_8());
+pub static TEST_FONT: LazyLock<FontType> =
+    std::sync::LazyLock::new(|| FontType::Image(ImageFont::test_font()));
+pub static TEST_FONT2: LazyLock<FontType> =
+    std::sync::LazyLock::new(|| FontType::Image(ImageFont::mono_5_8()));
 
-#[derive(Clone)]
+//pub static A_FONT: LazyLock<FontType> = std::sync::LazyLock::new(|| FontType::Image(&*TEST_FONT2));
+
+//            font: FontType::Image(&*TEST_FONT2),
+
 pub enum FontType {
-    Image(&'static ImageFont),
+    Image(ImageFont),
 }
 
 impl Font for FontType {
