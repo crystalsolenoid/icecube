@@ -2,7 +2,7 @@ use std::sync::LazyLock;
 
 use crate::buffer::Buffer;
 use crate::element::Element;
-use crate::font::{Font, FontType, ImageFont, TEST_FONT, TEST_FONT2};
+use crate::font::{self, Font, FontType};
 use crate::layout::CalculatedLayout;
 
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
@@ -11,6 +11,8 @@ const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
 pub struct Text {
     pub content: String,
     pub font: &'static LazyLock<FontType>,
+    x_spacing: u32,
+    y_spacing: u32,
     //pub font: &'static FontType,
 }
 
@@ -18,7 +20,9 @@ impl Text {
     pub fn new(content: String) -> Self {
         Self {
             content,
-            font: &TEST_FONT2,
+            font: &font::OLDSCHOOL,
+            x_spacing: 1,
+            y_spacing: 1,
         }
     }
 
@@ -40,14 +44,15 @@ impl Element for Text {
             .enumerate()
             .for_each(|(character_index, character)| {
                 let (frame_x, frame_y) = (region.x, region.y);
-                let linear_progress = character_index as u32 * 6;
+                let linear_progress =
+                    character_index as u32 * (self.font.width() as u32 + self.x_spacing);
                 let usable_width = Self::usable_width(region.w);
 
                 let line_number = linear_progress / usable_width;
                 let column_number = linear_progress % usable_width;
 
                 let char_x = frame_x + column_number;
-                let char_y = frame_y + line_number * (8 + 1);
+                let char_y = frame_y + line_number * (self.font.height() as u32 + self.y_spacing);
 
                 font.draw_character(
                     &mut Buffer {
@@ -62,8 +67,9 @@ impl Element for Text {
     }
 
     fn wrap(&self, width: u32) -> Option<u32> {
-        let length = self.content.len() as u32 * 6;
+        let length = self.content.len() as u32 * (self.font.width() as u32 + self.x_spacing);
         let lines = length / Self::usable_width(width) + 1; // TODO + 1 is a hack
-        Some(lines * (8 + 1))
+
+        Some(lines * (self.font.height() as u32 + self.y_spacing) - self.y_spacing)
     }
 }

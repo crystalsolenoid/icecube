@@ -14,7 +14,7 @@ use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 
 use icecube::button::Button;
-use icecube::font::{TEST_FONT, TEST_FONT2};
+use icecube::font;
 use icecube::layout::{CalculatedLayout, Layout, Length};
 use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_DARK, MAIN_LIGHT, RED_DARK, RED_LIGHT};
 use icecube::quad::{BorderStyle, Quad, QuadStyle};
@@ -200,7 +200,7 @@ fn build_ui_tree() -> Node<Layout> {
     b.push(
         menu_item(
             "A long piece of text that currently overflows its box...",
-            &TEST_FONT,
+            &font::MONO_5_8,
         )
         .width(Length::Grow),
     );
@@ -225,14 +225,14 @@ fn build_ui_tree() -> Node<Layout> {
             .row()
     };
 
-    panel.push(menu_item("a", &TEST_FONT2));
+    panel.push(menu_item("a", &font::OLDSCHOOL));
     //    panel.push(menu_item("a", builtin_fonts::TEST_FONT)); // TODO
     //    panel.push(menu_item("a", FontType::Image(wiftnywfutn)));
-    panel.push(menu_item("b", &TEST_FONT2));
-    panel.push(menu_item("c - a long label", &TEST_FONT2));
-    panel.push(menu_item("d", &TEST_FONT2));
+    panel.push(menu_item("b", &font::OLDSCHOOL));
+    panel.push(menu_item("c - a long label", &font::OLDSCHOOL));
+    panel.push(menu_item("d", &font::OLDSCHOOL));
     panel.push(spacer());
-    panel.push(menu_item("這", &TEST_FONT2));
+    panel.push(menu_item("這", &font::OLDSCHOOL));
 
     viewport.push(a);
     viewport.push(b);
