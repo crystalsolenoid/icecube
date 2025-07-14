@@ -188,7 +188,7 @@ fn build_ui_tree() -> Node<Layout> {
         )
         .width(Length::Grow)
         .height(Length::Shrink)
-        .padding(1)
+        .padding(2)
         .row();
         container.push(Node::new(Text::new(label.into()).with_font(font)));
         container
