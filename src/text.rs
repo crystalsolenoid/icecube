@@ -44,31 +44,39 @@ impl Text {
 impl Element for Text {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
         let font = &self.font;
+        let x_per_char = self.font.width() as u32 + self.x_spacing;
+        let y_per_char = self.font.height() as u32 + self.y_spacing;
+        let wrap_points = wrap(&self.content, region.w as usize / x_per_char as usize);
+
+        // wrap_points and self.content.split(" ") should always be
+        // the same length. are we correct on that assumption?
+        assert_eq!(wrap_points.len(), self.content.split(' ').count());
 
         self.content
-            .chars()
-            .enumerate()
-            .for_each(|(character_index, character)| {
-                let (frame_x, frame_y) = (region.x, region.y);
-                let linear_progress =
-                    character_index as u32 * (self.font.width() as u32 + self.x_spacing);
-                let usable_width = Self::usable_width(region.w);
+            .split(' ')
+            .zip(wrap_points)
+            .for_each(|(word, (start_column, current_row))| {
+                word.chars()
+                    .enumerate()
+                    .for_each(|(character_index, character)| {
+                        let (frame_x, frame_y) = (region.x, region.y);
 
-                let line_number = linear_progress / usable_width;
-                let column_number = linear_progress % usable_width;
+                        let line_number = current_row as u32;
+                        let column_number = (start_column + character_index) as u32;
 
-                let char_x = frame_x + column_number;
-                let char_y = frame_y + line_number * (self.font.height() as u32 + self.y_spacing);
+                        let char_x = frame_x + column_number * x_per_char;
+                        let char_y = frame_y + line_number * y_per_char;
 
-                font.draw_character(
-                    &mut Buffer {
-                        data: frame,
-                        width: WIDTH as usize,
-                    },
-                    char_x as usize,
-                    char_y as usize,
-                    character,
-                );
+                        font.draw_character(
+                            &mut Buffer {
+                                data: frame,
+                                width: WIDTH as usize,
+                            },
+                            char_x as usize,
+                            char_y as usize,
+                            character,
+                        );
+                    })
             });
     }
 
@@ -77,42 +85,40 @@ impl Element for Text {
         if hard_wrap {
             self.hard_wrap(width)
         } else {
-            dbg!(width);
-            let positions = dbg!(wrap(
+            let positions = wrap(
                 &self.content,
-                width as usize / (self.font.width() + self.x_spacing as usize)
-            ));
+                width as usize / (self.font.width() + self.x_spacing as usize),
+            );
             //TODO: don't add final character spacing
             let (_, num_rows) = *positions.last().unwrap_or(&(0, 0));
 
-            dbg!(Some(
-                (num_rows as u32 + 1) * (self.font.height() as u32 + self.y_spacing)
-            ))
+            Some((num_rows as u32 + 1) * (self.font.height() as u32 + self.y_spacing))
         }
     }
 }
+
 pub fn wrap(content: &str, width: usize) -> Vec<(usize, usize)> {
     content
         .split(' ')
         .scan((0, 0), |(current_column, current_row), word| {
             // We don't handle this yet
-            assert!(word.len() < width);
+            assert!(word.len() <= width);
 
             // 3 cases:
-            let (next_column, next_row) = if *current_column == 0 {
+            let (next_row, start_column) = if *current_column == 0 {
                 // Very first word
-                (word.len() - 1, 0)
+                (0, 0)
             } else if (*current_column + word.len()) >= width {
                 // We need to wrap
-                (word.len() - 1, *current_row + 1)
+                (*current_row + 1, 0)
             } else {
                 // Move along the row
-                (*current_column + word.len() + 1, *current_row)
+                (*current_row, *current_column + 1)
             };
 
             *current_row = next_row;
-            *current_column = next_column;
-            Some((*current_column, *current_row))
+            *current_column = start_column + word.len();
+            Some((start_column, *current_row))
         })
         .collect()
 }
@@ -125,18 +131,22 @@ mod test {
     fn wrap_quick() {
         let test = "the quick brown fox jumps over the lazy dog";
         let width = 12;
+        // the quick   |
+        // brown fox   |
+        // jumps over  |
+        // the lazy dog|
         assert_eq!(
             wrap(test, width),
             vec![
-                (2, 0),
-                (8, 0),
-                (4, 1),
-                (8, 1),
-                (4, 2),
-                (9, 2),
-                (2, 3),
-                (7, 3),
-                (11, 3)
+                (0, 0), // the
+                (4, 0), // quick
+                (0, 1), // brown
+                (6, 1), // fox
+                (0, 2), // jumps
+                (6, 2), // over
+                (0, 3), // the
+                (4, 3), // lazy
+                (9, 3)  // dog
             ]
         )
     }
@@ -144,23 +154,52 @@ mod test {
     fn long_first_word() {
         let test = "abcdefghijkl abc";
         let width = 12;
-        assert_eq!(wrap(test, width), vec![(11, 0), (2, 1)])
+        // abcdefghijkl|
+        // abc         |
+        assert_eq!(wrap(test, width), vec![(0, 0), (0, 1)])
     }
     #[test]
     fn long_word() {
         let test = "the quick brown fox abcdefghijkl the lazy dog";
         let width = 12;
+        // the quick   |
+        // brown fox   |
+        // abcdefghijkl|
+        // the lazy dog|
         assert_eq!(
             wrap(test, width),
             vec![
-                (2, 0),
-                (8, 0),
-                (4, 1),
-                (8, 1),
-                (11, 2),
-                (2, 3),
-                (7, 3),
-                (11, 3)
+                (0, 0), // the
+                (4, 0), // quick
+                (0, 1), // brown
+                (6, 1), // fox
+                (0, 2), // abcdefghijkl
+                (0, 3), // the
+                (4, 3), // lazy
+                (9, 3)  // dog
+            ]
+        );
+    }
+
+    #[test]
+    fn one_letter_start() {
+        let test = "a quick brown fox abcdefghijkl the lazy dog";
+        let width = 12;
+        // a quick     |
+        // brown fox   |
+        // abcdefghijkl|
+        // the lazy dog|
+        assert_eq!(
+            wrap(test, width),
+            vec![
+                (0, 0), // a
+                (2, 0), // quick
+                (0, 1), // brown
+                (6, 1), // fox
+                (0, 2), // abcdefghijkl
+                (0, 3), // the
+                (4, 3), // lazy
+                (9, 3)  // dog
             ]
         );
     }

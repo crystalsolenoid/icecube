@@ -199,7 +199,7 @@ fn build_ui_tree() -> Node<Layout> {
     b.push(b_child());
     b.push(
         menu_item(
-            "A long piece of text that currently overflows its box...",
+            "A long piece of text that no longer overflows its box...",
             &font::MONO_5_8,
         )
         .width(Length::Grow),
