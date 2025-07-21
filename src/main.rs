@@ -195,16 +195,13 @@ fn build_ui_tree() -> Node<Layout> {
     };
 
     b.push(b_child());
-    b.push(b_child());
-    b.push(b_child());
     b.push(
         menu_item(
             "A long piece of text that no longer overflows its box...",
-            &font::MONO_5_8,
+            &font::BLACKLETTER,
         )
         .width(Length::Grow),
     );
-    b.push(b_child());
     b.push(b_child());
     b.push(b_child());
 

@@ -1,5 +1,6 @@
 use std::{char, sync::LazyLock};
 
+use bdf2;
 use image::{ImageBuffer, Luma};
 
 use crate::{buffer::Buffer, palette::BLUE_LIGHT};
@@ -8,6 +9,8 @@ pub static OLDSCHOOL: LazyLock<FontType> =
     std::sync::LazyLock::new(|| FontType::Image(ImageFont::oldschool()));
 pub static MONO_5_8: LazyLock<FontType> =
     std::sync::LazyLock::new(|| FontType::Image(ImageFont::mono_5_8()));
+pub static BLACKLETTER: LazyLock<FontType> =
+    std::sync::LazyLock::new(|| FontType::Bdf(BdfFont::blackletter()));
 
 //pub static A_FONT: LazyLock<FontType> = std::sync::LazyLock::new(|| FontType::Image(&*TEST_FONT2));
 
@@ -15,6 +18,54 @@ pub static MONO_5_8: LazyLock<FontType> =
 
 pub enum FontType {
     Image(ImageFont),
+    Bdf(BdfFont),
+}
+
+pub struct BdfFont {
+    font: bdf2::Font,
+}
+
+impl BdfFont {
+    fn blackletter() -> Self {
+        Self {
+            font: bdf2::open("./src/resources/NotJam/Blackletter/NotJamBlkltr13-13.bdf").unwrap(),
+        }
+    }
+}
+
+impl Font for BdfFont {
+    fn draw_character(
+        &self,
+        buffer: &mut Buffer,
+        screen_x: usize,
+        screen_y: usize,
+        character: char,
+    ) {
+        let glyph = self.font.glyphs().get(&character).unwrap();
+        glyph.pixels().for_each(|((x, y), value)| {
+            let frame_index =
+                ((screen_x + x as usize) + (screen_y + y as usize) * buffer.width) * 4;
+
+            if value && frame_index + 4 < buffer.len()
+            // our current workaround for out of
+            // bounds crashing
+            {
+                buffer.data[frame_index..(frame_index + 4)].copy_from_slice(&BLUE_LIGHT);
+            }
+        });
+    }
+
+    fn width(&self) -> usize {
+        14
+    }
+
+    fn height(&self) -> usize {
+        14
+    }
+
+    fn fallback_character(&self) -> char {
+        '?'
+    }
 }
 
 impl Font for FontType {
@@ -27,21 +78,25 @@ impl Font for FontType {
     ) {
         match self {
             Self::Image(f) => f.draw_character(buffer, screen_x, screen_y, character),
+            Self::Bdf(f) => f.draw_character(buffer, screen_x, screen_y, character),
         }
     }
     fn width(&self) -> usize {
         match self {
             Self::Image(f) => f.width(),
+            Self::Bdf(f) => f.width(),
         }
     }
     fn height(&self) -> usize {
         match self {
             Self::Image(f) => f.height(),
+            Self::Bdf(f) => f.height(),
         }
     }
     fn fallback_character(&self) -> char {
         match self {
             Self::Image(f) => f.fallback_character(),
+            Self::Bdf(f) => f.fallback_character(),
         }
     }
 }
