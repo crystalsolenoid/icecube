@@ -23,12 +23,14 @@ pub enum FontType {
 
 pub struct BdfFont {
     font: bdf2::Font,
+    space_width: usize,
 }
 
 impl BdfFont {
     fn blackletter() -> Self {
         Self {
             font: bdf2::open("./src/resources/NotJam/Blackletter/NotJamBlkltr13-13.bdf").unwrap(),
+            space_width: 8,
         }
     }
 }
@@ -40,8 +42,9 @@ impl Font for BdfFont {
         screen_x: usize,
         screen_y: usize,
         character: char,
-    ) {
+    ) -> usize {
         let glyph = self.font.glyphs().get(&character).unwrap();
+
         glyph.pixels().for_each(|((x, y), value)| {
             let frame_index =
                 ((screen_x + x as usize) + (screen_y + y as usize) * buffer.width) * 4;
@@ -53,6 +56,19 @@ impl Font for BdfFont {
                 buffer.data[frame_index..(frame_index + 4)].copy_from_slice(&BLUE_LIGHT);
             }
         });
+
+        self.glyph_width(character)
+    }
+
+    fn glyph_width(&self, character: char) -> usize {
+        let glyph = self.font.glyphs().get(&character).unwrap();
+
+        // special handling here, maybe just because our test bdf font is broken
+        if character == ' ' {
+            self.space_width
+        } else {
+            glyph.width() as usize
+        }
     }
 
     fn width(&self) -> usize {
@@ -75,10 +91,16 @@ impl Font for FontType {
         screen_x: usize,
         screen_y: usize,
         character: char,
-    ) {
+    ) -> usize {
         match self {
             Self::Image(f) => f.draw_character(buffer, screen_x, screen_y, character),
             Self::Bdf(f) => f.draw_character(buffer, screen_x, screen_y, character),
+        }
+    }
+    fn glyph_width(&self, character: char) -> usize {
+        match self {
+            Self::Image(f) => f.glyph_width(character),
+            Self::Bdf(f) => f.glyph_width(character),
         }
     }
     fn width(&self) -> usize {
@@ -157,6 +179,9 @@ impl ImageFont {
 }
 
 impl Font for ImageFont {
+    fn glyph_width(&self, _: char) -> usize {
+        self.character_width
+    }
     fn width(&self) -> usize {
         self.character_width
     }
@@ -173,9 +198,9 @@ impl Font for ImageFont {
         screen_x: usize,
         screen_y: usize,
         character: char,
-    ) {
+    ) -> usize {
         let index = match character {
-            ' ' => return,
+            ' ' => return self.character_width,
             c if self.first_char <= c as u8 && self.last_char >= c as u8 => c,
             _ => self.fallback_character(),
         } as u8
@@ -206,6 +231,7 @@ impl Font for ImageFont {
                 }
             }
         }
+        self.character_width
     }
 }
 
@@ -216,7 +242,9 @@ pub trait Font {
         screen_x: usize,
         screen_y: usize,
         character: char,
-    );
+    ) -> usize;
+
+    fn glyph_width(&self, character: char) -> usize;
     fn width(&self) -> usize;
     fn height(&self) -> usize;
     fn fallback_character(&self) -> char;

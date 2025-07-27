@@ -44,9 +44,13 @@ impl Text {
 impl Element for Text {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
         let font = &self.font;
-        let x_per_char = self.font.width() as u32 + self.x_spacing;
         let y_per_char = self.font.height() as u32 + self.y_spacing;
-        let wrap_points = wrap(&self.content, region.w as usize / x_per_char as usize);
+        let wrap_points = wrap_variable_width(
+            font,
+            &self.content,
+            self.x_spacing as usize,
+            region.w as usize,
+        );
 
         // wrap_points and self.content.split(" ") should always be
         // the same length. are we correct on that assumption?
@@ -55,19 +59,18 @@ impl Element for Text {
         self.content
             .split(' ')
             .zip(wrap_points)
-            .for_each(|(word, (start_column, current_row))| {
+            .for_each(|(word, (start_x_pos, current_row))| {
                 word.chars()
                     .enumerate()
-                    .for_each(|(character_index, character)| {
+                    .scan(start_x_pos, |x_pos, (_, character)| {
                         let (frame_x, frame_y) = (region.x, region.y);
 
                         let line_number = current_row as u32;
-                        let column_number = (start_column + character_index) as u32;
 
-                        let char_x = frame_x + column_number * x_per_char;
+                        let char_x = frame_x + *x_pos as u32;
                         let char_y = frame_y + line_number * y_per_char;
 
-                        font.draw_character(
+                        let char_width = font.draw_character(
                             &mut Buffer {
                                 data: frame,
                                 width: WIDTH as usize,
@@ -76,7 +79,11 @@ impl Element for Text {
                             char_y as usize,
                             character,
                         );
+
+                        *x_pos += char_width + self.x_spacing as usize;
+                        Some(*x_pos)
                     })
+                    .last();
             });
     }
 
@@ -85,9 +92,11 @@ impl Element for Text {
         if hard_wrap {
             self.hard_wrap(width)
         } else {
-            let positions = wrap(
+            let positions = wrap_variable_width(
+                self.font,
                 &self.content,
-                width as usize / (self.font.width() + self.x_spacing as usize),
+                self.x_spacing as usize,
+                width as usize,
             );
             //TODO: don't add final character spacing
             let (_, num_rows) = *positions.last().unwrap_or(&(0, 0));
@@ -97,35 +106,72 @@ impl Element for Text {
     }
 }
 
-pub fn wrap(content: &str, width: usize) -> Vec<(usize, usize)> {
+pub fn wrap_variable_width(
+    font: &FontType,
+    content: &str,
+    character_padding: usize,
+    width_px: usize,
+) -> Vec<(usize, usize)> {
+    let space_width = font.glyph_width(' ');
     content
         .split(' ')
         .scan((0, 0), |(current_column, current_row), word| {
+            let word_length = word_length(font, word, character_padding);
             // We don't handle this yet
-            assert!(word.len() <= width);
+            assert!(word_length <= width_px);
 
             // 3 cases:
             let (next_row, start_column) = if *current_column == 0 {
                 // Very first word
                 (0, 0)
-            } else if (*current_column + word.len()) >= width {
+            } else if (*current_column + word_length + space_width) >= width_px {
                 // We need to wrap
                 (*current_row + 1, 0)
             } else {
                 // Move along the row
-                (*current_row, *current_column + 1)
+                (*current_row, *current_column + space_width)
             };
 
             *current_row = next_row;
-            *current_column = start_column + word.len();
+            *current_column = start_column + word_length;
             Some((start_column, *current_row))
         })
         .collect()
 }
 
+fn word_length(font: &FontType, word: &str, character_padding: usize) -> usize {
+    word.chars()
+        .map(|c| font.glyph_width(c) + character_padding)
+        .sum()
+}
+
 #[cfg(test)]
 mod test {
-    use super::*;
+    fn wrap(content: &str, width: usize) -> Vec<(usize, usize)> {
+        content
+            .split(' ')
+            .scan((0, 0), |(current_column, current_row), word| {
+                // We don't handle this yet
+                assert!(word.len() <= width);
+
+                // 3 cases:
+                let (next_row, start_column) = if *current_column == 0 {
+                    // Very first word
+                    (0, 0)
+                } else if (*current_column + word.len()) >= width {
+                    // We need to wrap
+                    (*current_row + 1, 0)
+                } else {
+                    // Move along the row
+                    (*current_row, *current_column + 1)
+                };
+
+                *current_row = next_row;
+                *current_column = start_column + word.len();
+                Some((start_column, *current_row))
+            })
+            .collect()
+    }
 
     #[test]
     fn wrap_quick() {
