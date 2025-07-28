@@ -11,6 +11,8 @@ pub static MONO_5_8: LazyLock<FontType> =
     std::sync::LazyLock::new(|| FontType::Image(ImageFont::mono_5_8()));
 pub static BLACKLETTER: LazyLock<FontType> =
     std::sync::LazyLock::new(|| FontType::Bdf(BdfFont::blackletter()));
+pub static SCRAWL: LazyLock<FontType> =
+    std::sync::LazyLock::new(|| FontType::Bdf(BdfFont::scrawl()));
 
 //pub static A_FONT: LazyLock<FontType> = std::sync::LazyLock::new(|| FontType::Image(&*TEST_FONT2));
 
@@ -24,6 +26,7 @@ pub enum FontType {
 pub struct BdfFont {
     font: bdf2::Font,
     space_width: usize,
+    line_height: usize,
 }
 
 impl BdfFont {
@@ -31,6 +34,14 @@ impl BdfFont {
         Self {
             font: bdf2::open("./src/resources/NotJam/Blackletter/NotJamBlkltr13-13.bdf").unwrap(),
             space_width: 8,
+            line_height: 14,
+        }
+    }
+    fn scrawl() -> Self {
+        Self {
+            font: bdf2::open("./src/resources/NotJam/Scrawl/scrawl9-9.bdf").unwrap(),
+            space_width: 6,
+            line_height: 10,
         }
     }
 }
@@ -82,7 +93,7 @@ impl Font for BdfFont {
     }
 
     fn height(&self) -> usize {
-        14
+        self.line_height
     }
 
     fn fallback_character(&self) -> char {
