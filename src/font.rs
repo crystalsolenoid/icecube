@@ -44,10 +44,16 @@ impl Font for BdfFont {
         character: char,
     ) -> usize {
         let glyph = self.font.glyphs().get(&character).unwrap();
+        let y_offset = glyph.bounds().y;
+        let glyph_height = glyph.bounds().height;
+
+        let baseline = screen_y as i32 + (self.height() as u32 - glyph_height) as i32;
 
         glyph.pixels().for_each(|((x, y), value)| {
-            let frame_index =
-                ((screen_x + x as usize) + (screen_y + y as usize) * buffer.width) * 4;
+            // let above_baseline = y - (glyph_height - self.height());
+            let frame_index = ((screen_x + x as usize)
+                + ((baseline - y_offset) as usize + y as usize) * buffer.width)
+                * 4;
 
             if value && frame_index + 4 < buffer.len()
             // our current workaround for out of
