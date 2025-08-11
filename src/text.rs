@@ -104,6 +104,14 @@ impl Element for Text {
             Some((num_rows as u32 + 1) * (self.font.height() as u32 + self.y_spacing))
         }
     }
+
+    fn get_message(
+        &self,
+        _input: &crate::button::Input,
+        _region: CalculatedLayout,
+    ) -> Option<crate::button::Message> {
+        None
+    }
 }
 
 pub fn wrap_variable_width(

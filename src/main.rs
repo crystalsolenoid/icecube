@@ -106,7 +106,7 @@ fn _build_ui_tree_simpler() -> Node<Layout> {
 */
 
 // TODO can we specify a generic default for Node for a nicer API?
-fn build_ui_tree() -> Node<Layout> {
+fn build_ui_tree(state: &State) -> Node<Layout> {
     /*
      * Intended layout tree:
      *
@@ -225,7 +225,7 @@ fn build_ui_tree() -> Node<Layout> {
     let button_text = Node::new(Text::new("color".into()).with_font(&font::OLDSCHOOL));
     let mut button_quad = Node::new(
         Quad::new()
-            .fill(MAIN_LIGHT)
+            .fill(state.text_color)
             .border_thickness(1)
             .border_color(BLUE_DARK),
     )
@@ -234,7 +234,7 @@ fn build_ui_tree() -> Node<Layout> {
     .padding(2)
     .row();
     button_quad.push(button_text);
-    let mut change_text_color = Node::new(Button::new())
+    let mut change_text_color = Node::new(Button::new().on_press(Message::ButtonClick))
         .width(Length::Grow)
         .height(Length::Shrink);
     change_text_color.push(button_quad);
@@ -258,7 +258,28 @@ fn build_ui_tree() -> Node<Layout> {
     root
 }
 
+// TODO this will be defined by the person writing the UI, not by the icecube library
+#[derive(Default)]
+struct State {
+    text_color: icecube::palette::Color,
+}
+
+use icecube::button::Message;
+// TODO this will be defined by the person writing the UI, not by the icecube library
+fn update(m: Message, state: &mut State) {
+    match m {
+        Message::ButtonClick => state.text_color = MAIN_LIGHT,
+        Message::ButtonHover => (),
+    }
+}
+
+// TODO this will be defined by the person writing the UI, not by the icecube library
+fn view(state: &State) -> Node<Layout> {
+    build_ui_tree(state)
+}
+
 fn main() -> Result<(), Error> {
+    let mut state = State::default();
     env_logger::init();
     let event_loop = EventLoop::new().unwrap();
     let mut input = WinitInputHelper::new();
@@ -280,7 +301,7 @@ fn main() -> Result<(), Error> {
     let srgb = to_linear_rgb(MAIN_DARK);
     pixels.clear_color(srgb);
 
-    let root = build_ui_tree().calculate_layout();
+    let mut root = view(&state).calculate_layout();
 
     let mut mouse_position: Result<(usize, usize), (isize, isize)> = Err((0, 0));
 
@@ -330,6 +351,26 @@ fn main() -> Result<(), Error> {
                     elwt.exit();
                     return;
                 }
+            }
+
+            // build input struct
+            let input_mouse_pos = if let Ok((x, y)) = mouse_position {
+                Some((x as u32, y as u32))
+            } else {
+                None
+            };
+            let better_input = icecube::button::Input {
+                mouse_released: input.mouse_released(0),
+                mouse_pos: input_mouse_pos,
+            };
+
+            // get a message, if any
+            let message = root.get_message(&better_input);
+
+            // TODO handle multiple messages in a frame?
+            if let Some(message) = message {
+                update(message, &mut state);
+                root = view(&state).calculate_layout();
             }
 
             if input.mouse_released(0) {

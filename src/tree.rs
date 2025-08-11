@@ -155,4 +155,15 @@ impl Node<CalculatedLayout> {
             .for_each(|child| child.on_click(position));
         self.element.on_click(position);
     }
+    pub fn get_message(&self, input: &crate::button::Input) -> Option<crate::button::Message> {
+        let message = self.element.get_message(input, self.layout);
+        if message.is_some() {
+            message
+        } else {
+            self.children
+                .iter()
+                .filter_map(|child| child.get_message(input))
+                .next()
+        }
+    }
 }

@@ -120,4 +120,12 @@ impl Element for Quad {
             }
         }
     }
+
+    fn get_message(
+        &self,
+        _input: &crate::button::Input,
+        _region: CalculatedLayout,
+    ) -> Option<crate::button::Message> {
+        None
+    }
 }
