@@ -147,14 +147,7 @@ impl Node<CalculatedLayout> {
             .iter() // TODO mut bad
             .for_each(|node| node.draw_recursive(frame, (0, 0)));
     }
-    pub fn on_click(&self, position: (u32, u32)) {
-        self.children
-            .iter()
-            .filter(|child| child.layout.contains(position))
-            //TODO: pass position relative to child
-            .for_each(|child| child.on_click(position));
-        self.element.on_click(position);
-    }
+
     pub fn get_message(&self, input: &crate::button::Input) -> Option<crate::button::Message> {
         let message = self.element.get_message(input, self.layout);
         if message.is_some() {

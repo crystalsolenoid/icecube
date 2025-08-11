@@ -44,10 +44,6 @@ impl Button {
 
 impl Element for Button {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {}
-
-    fn on_click(&self, _position: (u32, u32)) {
-        println!("button press")
-    }
     fn get_message(
         &self,
         input: &Input,

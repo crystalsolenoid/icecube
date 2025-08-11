@@ -282,7 +282,7 @@ fn main() -> Result<(), Error> {
     let mut state = State::default();
     env_logger::init();
     let event_loop = EventLoop::new().unwrap();
-    let mut input = WinitInputHelper::new();
+    let mut winit_input = WinitInputHelper::new();
     let window = {
         let size = LogicalSize::new(2.0 * WIDTH as f64, 2.0 * HEIGHT as f64);
         WindowBuilder::new()
@@ -337,15 +337,15 @@ fn main() -> Result<(), Error> {
         }
 
         // Handle input events
-        if input.update(&event) {
+        if winit_input.update(&event) {
             // Close events
-            if input.key_pressed(KeyCode::Escape) || input.close_requested() {
+            if winit_input.key_pressed(KeyCode::Escape) || winit_input.close_requested() {
                 elwt.exit();
                 return;
             }
 
             // Resize the window
-            if let Some(size) = input.window_resized() {
+            if let Some(size) = winit_input.window_resized() {
                 if let Err(err) = pixels.resize_surface(size.width, size.height) {
                     log_error("pixels.resize_surface", err);
                     elwt.exit();
@@ -359,24 +359,18 @@ fn main() -> Result<(), Error> {
             } else {
                 None
             };
-            let better_input = icecube::button::Input {
-                mouse_released: input.mouse_released(0),
+            let input = icecube::button::Input {
+                mouse_released: winit_input.mouse_released(0),
                 mouse_pos: input_mouse_pos,
             };
 
             // get a message, if any
-            let message = root.get_message(&better_input);
+            let message = root.get_message(&input);
 
             // TODO handle multiple messages in a frame?
             if let Some(message) = message {
                 update(message, &mut state);
                 root = view(&state).calculate_layout();
-            }
-
-            if input.mouse_released(0) {
-                if let Ok((x, y)) = mouse_position {
-                    root.on_click((x as u32, y as u32));
-                }
             }
 
             // Update internal state and request a redraw
