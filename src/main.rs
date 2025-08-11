@@ -222,7 +222,24 @@ fn build_ui_tree() -> Node<Layout> {
             .row()
     };
 
-    panel.push(menu_item("a", &font::OLDSCHOOL));
+    let button_text = Node::new(Text::new("color".into()).with_font(&font::OLDSCHOOL));
+    let mut button_quad = Node::new(
+        Quad::new()
+            .fill(MAIN_LIGHT)
+            .border_thickness(1)
+            .border_color(BLUE_DARK),
+    )
+    .width(Length::Grow) // TODO when this is shrink, the text has zero room. Why?
+    .height(Length::Shrink)
+    .padding(2)
+    .row();
+    button_quad.push(button_text);
+    let mut change_text_color = Node::new(Button::new())
+        .width(Length::Grow)
+        .height(Length::Shrink);
+    change_text_color.push(button_quad);
+
+    panel.push(change_text_color);
     //    panel.push(menu_item("a", builtin_fonts::TEST_FONT)); // TODO
     //    panel.push(menu_item("a", FontType::Image(wiftnywfutn)));
     panel.push(menu_item("b", &font::OLDSCHOOL));
