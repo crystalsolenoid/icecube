@@ -1,12 +1,12 @@
 use crate::layout::{CalculatedLayout, Layout};
 
-pub trait Element {
+pub trait Element<Message> {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout);
     fn get_message(
         &self,
         input: &crate::button::Input,
         region: CalculatedLayout,
-    ) -> Option<crate::button::Message>;
+    ) -> Option<Message>;
     fn layout_parameters(&self) -> Layout {
         // TODO this was for quick compiling. Do we still want it long-term?
         Layout::default()

@@ -18,8 +18,8 @@ use pipeline_types::{GrownHeightLayout, GrownWidthLayout, ShrinkHeightLayout, Sh
 // positions
 // draw commands
 
-impl Node<Layout> {
-    pub fn calculate_layout(self) -> Node<CalculatedLayout> {
+impl<Message> Node<Message, Layout> {
+    pub fn calculate_layout(self) -> Node<Message, CalculatedLayout> {
         // TODO: Use better types for root node, so we don't have to match for unsupported root
         // node length types
         let root_size = match (self.layout.width, self.layout.height) {
@@ -36,7 +36,7 @@ impl Node<Layout> {
 
     /// Render pass 1/3
     /// bottom-up pass
-    fn shrink_width_pass(self) -> Node<ShrinkWidthLayout> {
+    fn shrink_width_pass(self) -> Node<Message, ShrinkWidthLayout> {
         let new_children: Vec<_> = self
             .children
             .into_iter()
@@ -86,7 +86,7 @@ impl Node<Layout> {
     }
 }
 
-impl Node<GrownWidthLayout> {
+impl<Message> Node<Message, GrownWidthLayout> {
     fn wrap(self) -> Self {
         let height = match self.element.wrap(self.layout.width) {
             Some(h) => Length::Fixed(h),
@@ -113,7 +113,7 @@ impl Node<GrownWidthLayout> {
 
     /// Render pass 1/3
     /// bottom-up pass
-    fn shrink_height_pass(self) -> Node<ShrinkHeightLayout> {
+    fn shrink_height_pass(self) -> Node<Message, ShrinkHeightLayout> {
         let new_children: Vec<_> = self
             .children
             .into_iter()
@@ -163,10 +163,10 @@ impl Node<GrownWidthLayout> {
     }
 }
 
-impl Node<ShrinkWidthLayout> {
+impl<Message> Node<Message, ShrinkWidthLayout> {
     /// Render pass 2/3
     /// top-down
-    fn grow_width_pass(self, assigned_width: GrownLength) -> Node<GrownWidthLayout> {
+    fn grow_width_pass(self, assigned_width: GrownLength) -> Node<Message, GrownWidthLayout> {
         let new_children_widths: Vec<_> = match self.layout.direction {
             LayoutDirection::Column => self
                 .children
@@ -233,10 +233,10 @@ impl Node<ShrinkWidthLayout> {
     }
 }
 
-impl Node<ShrinkHeightLayout> {
+impl<Message> Node<Message, ShrinkHeightLayout> {
     /// Render pass 2/3
     /// top-down
-    fn grow_height_pass(self, assigned_height: GrownLength) -> Node<GrownHeightLayout> {
+    fn grow_height_pass(self, assigned_height: GrownLength) -> Node<Message, GrownHeightLayout> {
         let flow_cross_padding = self.layout.summed_padding();
 
         let child_grow_number: u32 = self
@@ -297,10 +297,10 @@ impl Node<ShrinkHeightLayout> {
         }
     }
 }
-impl Node<GrownHeightLayout> {
+impl<Message> Node<Message, GrownHeightLayout> {
     /// Render pass 3/3
     /// top-down
-    fn position_pass(self, parent_position: (u32, u32)) -> Node<CalculatedLayout> {
+    fn position_pass(self, parent_position: (u32, u32)) -> Node<Message, CalculatedLayout> {
         let first_child_position = (
             parent_position.0 + self.layout.padding.left,
             parent_position.1 + self.layout.padding.top,

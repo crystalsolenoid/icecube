@@ -4,13 +4,13 @@ use crate::{
     quad::{Quad, QuadStyle},
 };
 
-pub struct Node<LayoutStage> {
-    pub children: Vec<Node<LayoutStage>>,
-    pub element: Box<dyn Element>,
+pub struct Node<Message, LayoutStage> {
+    pub children: Vec<Node<Message, LayoutStage>>,
+    pub element: Box<dyn Element<Message>>,
     pub layout: LayoutStage, //Option<CalculatedLayout>,
 }
 
-impl Node<Layout> {
+impl<Message> Node<Message, Layout> {
     pub fn root_node(width: usize, height: usize) -> Self {
         let window = Quad::new()
             .style(QuadStyle {
@@ -32,7 +32,7 @@ impl Node<Layout> {
         }
     }
 
-    pub fn new(element: impl Element + 'static) -> Self {
+    pub fn new(element: impl Element<Message> + 'static) -> Self {
         Self {
             children: vec![],
             element: Box::new(element),
@@ -139,7 +139,7 @@ impl Node<Layout> {
     */
 }
 
-impl Node<CalculatedLayout> {
+impl<Message> Node<Message, CalculatedLayout> {
     pub fn draw_recursive(&self, frame: &mut [u8], _accum_position: (u32, u32)) {
         // TODO can we remove mut from self?
         self.element.draw(frame, self.layout);
@@ -148,7 +148,7 @@ impl Node<CalculatedLayout> {
             .for_each(|node| node.draw_recursive(frame, (0, 0)));
     }
 
-    pub fn get_message(&self, input: &crate::button::Input) -> Option<crate::button::Message> {
+    pub fn get_message(&self, input: &crate::button::Input) -> Option<Message> {
         let message = self.element.get_message(input, self.layout);
         if message.is_some() {
             message

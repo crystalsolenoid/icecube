@@ -1,12 +1,5 @@
 use crate::{element::Element, layout::CalculatedLayout};
 
-// TODO user-defined
-#[derive(Debug, Copy, Clone)]
-pub enum Message {
-    ButtonClick,
-    ButtonHover,
-}
-
 /// Holds all of the current frame's input state
 #[derive(Debug)]
 pub struct Input {
@@ -15,13 +8,13 @@ pub struct Input {
 }
 
 // TODO make generic so that user can define Message
-pub struct Button {
+pub struct Button<Message> {
     /// Pressed on the most recent frame
     on_press: Option<Message>,
     on_hover: Option<Message>,
 }
 
-impl Button {
+impl<Message> Button<Message> {
     pub fn new() -> Self {
         Self {
             on_press: None,
@@ -42,16 +35,12 @@ impl Button {
     }
 }
 
-impl Element for Button {
-    fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {}
-    fn get_message(
-        &self,
-        input: &Input,
-        region: CalculatedLayout,
-    ) -> Option<crate::button::Message> {
+impl<Message: Clone> Element<Message> for Button<Message> {
+    fn draw(&self, _frame: &mut [u8], _region: CalculatedLayout) {}
+    fn get_message(&self, input: &Input, region: CalculatedLayout) -> Option<Message> {
         if let Some(mouse_pos) = input.mouse_pos {
             if input.mouse_released && region.contains(mouse_pos) {
-                self.on_press
+                self.on_press.clone()
             } else {
                 None
             }

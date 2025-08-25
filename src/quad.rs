@@ -82,7 +82,7 @@ impl Quad {
     }
 }
 
-impl Element for Quad {
+impl<Message> Element<Message> for Quad {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
         let position = (region.x, region.y); // TODO fix types mess
                                              //TODO: Consider optimizing this if it is a bottleneck
@@ -125,7 +125,7 @@ impl Element for Quad {
         &self,
         _input: &crate::button::Input,
         _region: CalculatedLayout,
-    ) -> Option<crate::button::Message> {
+    ) -> Option<Message> {
         None
     }
 }

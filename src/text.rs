@@ -41,7 +41,7 @@ impl Text {
     }
 }
 
-impl Element for Text {
+impl<Message> Element<Message> for Text {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
         let font = &self.font;
         let y_per_char = self.font.height() as u32 + self.y_spacing;
@@ -109,7 +109,7 @@ impl Element for Text {
         &self,
         _input: &crate::button::Input,
         _region: CalculatedLayout,
-    ) -> Option<crate::button::Message> {
+    ) -> Option<Message> {
         None
     }
 }
