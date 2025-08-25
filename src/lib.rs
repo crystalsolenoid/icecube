@@ -10,7 +10,7 @@ use winit::{
 };
 use winit_input_helper::WinitInputHelper;
 
-use crate::{layout::Layout, palette::MAIN_DARK, tree::Node};
+use crate::{layout::Layout, palette::Color, tree::Node};
 
 pub mod buffer;
 pub mod button;
@@ -28,6 +28,7 @@ pub fn run<State, Message, Update, View>(
     view: View,
     width: u32,
     height: u32,
+    clear_color: Color,
 ) -> Result<(), Error>
 //TODO: make a custom error type
 where
@@ -58,7 +59,7 @@ where
     };
 
     // TODO: Let Users specify the palette/ clear color
-    let srgb = to_linear_rgb(MAIN_DARK);
+    let srgb = to_linear_rgb(clear_color);
     pixels.clear_color(srgb);
 
     let mut root = view(&state).calculate_layout();

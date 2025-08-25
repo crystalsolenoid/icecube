@@ -12,13 +12,11 @@ pub struct Node<Message, LayoutStage> {
 
 impl<Message> Node<Message, Layout> {
     pub fn root_node(width: usize, height: usize) -> Self {
-        let window = Quad::new()
-            .style(QuadStyle {
-                fill_style: None, // TODO should this be setting the background?
-                border_style: None,
-            })
-            .border_thickness(1)
-            .border_color(crate::palette::BLUE_LIGHT);
+        let window = Quad::new().style(QuadStyle {
+            fill_style: None, // TODO should this be setting the background?
+            border_style: None,
+        });
+
         Self {
             layout: Layout {
                 width: Length::Fixed(width as u32),
