@@ -52,7 +52,7 @@ impl<Message> Node<Message, Layout> {
             Length::Fixed(l) => ShrunkLength::Fixed(l),
             Length::Shrink => match self.layout.direction {
                 LayoutDirection::Row => {
-                    // Sum heights of children
+                    // Sum widths of children
                     let l: u32 = new_children_widths.sum();
                     let total_spacing =
                         new_children.len().saturating_sub(1) as u32 * self.layout.spacing;
@@ -61,7 +61,7 @@ impl<Message> Node<Message, Layout> {
                     )
                 }
                 LayoutDirection::Column => {
-                    // Get max child height
+                    // Get max child width
                     let max_child_cross_length: u32 = new_children_widths.max().unwrap_or(0);
                     ShrunkLength::Fixed(
                         max_child_cross_length
