@@ -39,6 +39,14 @@ impl Text {
 
         Some(lines * (self.font.height() as u32 + self.y_spacing) - self.y_spacing)
     }
+
+    fn get_max_word_px(&self) -> u32 {
+        self.content
+            .split(' ')
+            .map(|word| word_length(self.font, word, self.x_spacing as usize))
+            .max()
+            .unwrap_or_default() as u32
+    }
 }
 
 impl<Message> Element<Message> for Text {
@@ -103,6 +111,10 @@ impl<Message> Element<Message> for Text {
 
             Some((num_rows as u32 + 1) * (self.font.height() as u32 + self.y_spacing))
         }
+    }
+
+    fn min_width(&self) -> u32 {
+        dbg!(self.get_max_word_px())
     }
 
     fn get_message(

@@ -37,16 +37,19 @@ impl<Message> Node<Message, Layout> {
     /// Render pass 1/3
     /// bottom-up pass
     fn shrink_width_pass(self) -> Node<Message, ShrinkWidthLayout> {
+        dbg!(self.element.min_width());
         let new_children: Vec<_> = self
             .children
             .into_iter()
             .map(|c| c.shrink_width_pass())
             .collect();
 
-        let new_children_widths = new_children.iter().map(|child| match child.layout.width {
-            ShrunkLength::Grow => 0,
-            ShrunkLength::Fixed(l) => l,
-        });
+        let new_children_widths = new_children
+            .iter()
+            .map(|child| match dbg!(child.layout.width) {
+                ShrunkLength::Grow => dbg!(self.element.min_width()),
+                ShrunkLength::Fixed(l) => l,
+            });
         let new_width = match self.layout.width {
             Length::Grow => ShrunkLength::Grow,
             Length::Fixed(l) => ShrunkLength::Fixed(l),

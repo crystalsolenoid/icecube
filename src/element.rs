@@ -16,4 +16,7 @@ pub trait Element<Message> {
     fn wrap(&self, _width: u32) -> Option<u32> {
         None
     }
+    fn min_width(&self) -> u32 {
+        0
+    }
 }
