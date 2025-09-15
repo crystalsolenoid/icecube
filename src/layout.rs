@@ -26,8 +26,7 @@ impl<Message> Node<Message, Layout> {
             (Length::Fixed(w), Length::Fixed(h)) => XY(w, h),
             (_, _) => panic!(),
         };
-        self.shrink_width_pass()
-            .grow_width_pass(root_size.0)
+        dbg!(dbg!(self.shrink_width_pass()).grow_width_pass(root_size.0))
             .wrap()
             .shrink_height_pass()
             .grow_height_pass(root_size.1)
@@ -85,6 +84,7 @@ impl<Message> Node<Message, Layout> {
             },
             children: new_children,
             element: self.element,
+            name: self.name,
         }
     }
 }
@@ -111,6 +111,7 @@ impl<Message> Node<Message, GrownWidthLayout> {
             },
             children: new_children,
             element: self.element,
+            name: self.name,
         }
     }
 
@@ -162,6 +163,7 @@ impl<Message> Node<Message, GrownWidthLayout> {
             },
             children: new_children,
             element: self.element,
+            name: self.name,
         }
     }
 }
@@ -232,6 +234,7 @@ impl<Message> Node<Message, ShrinkWidthLayout> {
             },
             children: new_children,
             element: self.element,
+            name: self.name,
         }
     }
 }
@@ -297,6 +300,7 @@ impl<Message> Node<Message, ShrinkHeightLayout> {
             },
             children: new_children,
             element: self.element,
+            name: self.name,
         }
     }
 }
@@ -331,6 +335,7 @@ impl<Message> Node<Message, GrownHeightLayout> {
             layout: CalculatedLayout::new(x, y, self.layout.width, self.layout.height),
             children: new_children,
             element: self.element,
+            name: self.name,
         }
     }
 }

@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use crate::{
     element::Element,
     layout::{CalculatedLayout, Layout, LayoutDirection, Length, Padding},
@@ -8,6 +10,17 @@ pub struct Node<Message, LayoutStage> {
     pub children: Vec<Node<Message, LayoutStage>>,
     pub element: Box<dyn Element<Message>>,
     pub layout: LayoutStage, //Option<CalculatedLayout>,
+    pub name: Option<String>,
+}
+
+impl<Message, LayoutStage: Debug> Debug for Node<Message, LayoutStage> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("")
+            .field("name", &self.name)
+            .field("layout", &self.layout)
+            .field("children", &self.children)
+            .finish()
+    }
 }
 
 impl<Message> Node<Message, Layout> {
@@ -37,6 +50,7 @@ impl<Message> Node<Message, Layout> {
             layout: Layout {
                 ..Layout::default()
             },
+            name: None,
         }
     }
 

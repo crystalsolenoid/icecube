@@ -3,7 +3,7 @@ use super::{
     Padding,
 };
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug)]
 pub struct LayoutTemplate<Width, Height> {
     // about the node itself
     pub width: Width,
@@ -14,7 +14,7 @@ pub struct LayoutTemplate<Width, Height> {
     pub spacing: u32,
 }
 
-#[derive(Clone, Copy, Default, PartialEq)]
+#[derive(Clone, Copy, Default, PartialEq, Debug)]
 pub enum LayoutDirection {
     Column,
     #[default]
