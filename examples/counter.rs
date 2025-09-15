@@ -29,7 +29,7 @@ fn view(state: &State) -> Node<Message, Layout> {
 
     let mut container = Node::new(Quad::new().fill(MAIN_LIGHT))
         .column()
-        .width(Length::Shrink);
+        .width(Length::Fixed(50));
 
     let font = &font::BLACKLETTER;
 

@@ -7,6 +7,7 @@ pub(super) struct XY(pub u32, pub u32);
 pub(super) enum ShrunkLength {
     #[default]
     Grow,
+    GrowWithMin(u32),
     Fixed(u32),
 }
 

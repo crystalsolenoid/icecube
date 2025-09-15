@@ -16,3 +16,21 @@ fn shrink_doesnt_crash_text() {
 
     let _rendered = root.calculate_layout();
 }
+
+#[test]
+fn double_shrink_doesnt_crash_text() {
+    let mut root: Node<(), _> = Node::root_node(320, 240).row();
+
+    let mut container = Node::new(Quad::new()).column().width(Length::Shrink);
+
+    let mut count_row = Node::new(Quad::new()).row().width(Length::Grow);
+    let count = Node::new(Text::new(format!("{}", "123")));
+
+    count_row.push(count);
+
+    container.push(count_row);
+
+    root.push(container);
+
+    let _rendered = root.calculate_layout();
+}

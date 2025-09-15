@@ -46,11 +46,15 @@ impl<Message> Node<Message, Layout> {
         let new_children_widths = new_children
             .iter()
             .map(|child| match dbg!(child.layout.width) {
-                ShrunkLength::Grow => dbg!(child.element.min_width()),
+                ShrunkLength::Grow => 0, //dbg!(child.element.min_width()),
+                ShrunkLength::GrowWithMin(m) => m,
                 ShrunkLength::Fixed(l) => l,
             });
         let new_width = match self.layout.width {
-            Length::Grow => ShrunkLength::Grow,
+            Length::Grow => match self.element.min_width() {
+                0 => ShrunkLength::Grow,
+                w => ShrunkLength::GrowWithMin(w),
+            },
             Length::Fixed(l) => ShrunkLength::Fixed(l),
             Length::Shrink => match self.layout.direction {
                 LayoutDirection::Row => {
@@ -126,6 +130,7 @@ impl<Message> Node<Message, GrownWidthLayout> {
 
         let new_children_heights = new_children.iter().map(|child| match child.layout.height {
             ShrunkLength::Grow => 0,
+            ShrunkLength::GrowWithMin(l) => l,
             ShrunkLength::Fixed(l) => l,
         });
         let new_height = match self.layout.height {
@@ -181,6 +186,12 @@ impl<Message> Node<Message, ShrinkWidthLayout> {
                         // available width
                         assigned_width - (self.layout.padding.left + self.layout.padding.right)
                     }
+                    ShrunkLength::GrowWithMin(l) => {
+                        let new_width =
+                            assigned_width - (self.layout.padding.left + self.layout.padding.right);
+                        assert!(new_width >= l);
+                        new_width
+                    }
                     ShrunkLength::Fixed(l) => l,
                 })
                 .collect(),
@@ -191,6 +202,7 @@ impl<Message> Node<Message, ShrinkWidthLayout> {
                             .iter()
                             .map(|c| match c.layout.width {
                                 ShrunkLength::Grow => 0,
+                                ShrunkLength::GrowWithMin(l) => l,
                                 ShrunkLength::Fixed(l) => l,
                             })
                             .sum::<u32>(),
@@ -202,7 +214,11 @@ impl<Message> Node<Message, ShrinkWidthLayout> {
                 let child_grow_number: u32 = self
                     .children
                     .iter()
-                    .filter(|c| c.layout.width == ShrunkLength::Grow)
+                    .filter(|c| match c.layout.width {
+                        ShrunkLength::Grow => true,
+                        ShrunkLength::GrowWithMin(_) => true,
+                        ShrunkLength::Fixed(_) => false,
+                    })
                     .count()
                     .try_into()
                     .unwrap();
@@ -211,6 +227,7 @@ impl<Message> Node<Message, ShrinkWidthLayout> {
                     .iter()
                     .map(|c| match c.layout.width {
                         ShrunkLength::Grow => remaining_length / child_grow_number,
+                        ShrunkLength::GrowWithMin(l) => l + (remaining_length / child_grow_number),
                         ShrunkLength::Fixed(l) => l,
                     })
                     .collect()
@@ -263,6 +280,7 @@ impl<Message> Node<Message, ShrinkHeightLayout> {
                     .map(|c| match self.layout.direction {
                         LayoutDirection::Column => match c.layout.height {
                             ShrunkLength::Grow => 0,
+                            ShrunkLength::GrowWithMin(_) => todo!(), // probably copy width logic
                             ShrunkLength::Fixed(l) => l,
                         },
                         LayoutDirection::Row => c.layout.width,
@@ -284,6 +302,7 @@ impl<Message> Node<Message, ShrinkHeightLayout> {
                     }
 
                     (_, ShrunkLength::Fixed(l)) => l,
+                    _ => todo!(), // probably copy width logic
                 };
 
                 c.grow_height_pass(child_height)
