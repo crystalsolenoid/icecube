@@ -1,7 +1,7 @@
 use icecube::button::Button;
 use icecube::font::{self};
 use icecube::layout::{Layout, Length};
-use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_LIGHT};
+use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_LIGHT, RED_DARK, RED_LIGHT};
 use icecube::quad::Quad;
 use icecube::text::Text;
 use icecube::tree::Node;
@@ -27,23 +27,30 @@ fn update(m: Message, state: &mut State) {
 fn view(state: &State) -> Node<Message, Layout> {
     let mut root = Node::root_node(320, 240).row();
 
-    let mut container = Node::new(Quad::new().fill(MAIN_LIGHT))
-        .column()
-        .width(Length::Fixed(50));
+    // This fills the screen, causing the screen to clear each frame
+    let mut container = Node::new(Quad::new().fill(MAIN_LIGHT)).column();
 
     let font = &font::BLACKLETTER;
 
-    let mut count_row = Node::new(Quad::new()).row().height(Length::Shrink);
+    let mut count_row = Node::new(Quad::new().border_color(RED_DARK).border_thickness(1))
+        .row()
+        .height(Length::Shrink);
     let count = Node::new(Text::new(format!("{}", state.count)).with_font(font));
+    let mut count_container = Node::new(Quad::new());
+    count_container.push(count);
 
-    count_row.push(Node::new(Quad::new()));
-    count_row.push(count);
-    count_row.push(Node::new(Quad::new()));
+    count_row.push(Node::new(
+        Quad::new().border_color(RED_LIGHT).border_thickness(1),
+    ));
+    count_row.push(count_container);
+    count_row.push(Node::new(
+        Quad::new().border_color(RED_LIGHT).border_thickness(1),
+    ));
 
     let increment = make_button("+".into(), Message::Increment);
     let decrement = make_button("-".into(), Message::Decrement);
 
-    let mut button_row = Node::new(Quad::new()).row();
+    let mut button_row = Node::new(Quad::new().border_color(RED_DARK).border_thickness(1)).row();
     button_row.push(increment);
     button_row.push(Node::new(Quad::new()).width(Length::Fixed(2)));
     button_row.push(decrement);
