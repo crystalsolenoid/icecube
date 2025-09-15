@@ -29,11 +29,11 @@ fn view(state: &State) -> Node<Message, Layout> {
 
     let mut container = Node::new(Quad::new().fill(MAIN_LIGHT))
         .column()
-        .width(Length::Fixed(50));
+        .width(Length::Shrink);
 
     let font = &font::BLACKLETTER;
 
-    let mut count_row = Node::new(Quad::new()).row().height(Length::Fixed(20));
+    let mut count_row = Node::new(Quad::new()).row().height(Length::Shrink);
     let count = Node::new(Text::new(format!("{}", state.count)).with_font(font));
 
     count_row.push(Node::new(Quad::new()));

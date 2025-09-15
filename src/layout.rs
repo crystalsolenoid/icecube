@@ -26,7 +26,7 @@ impl<Message> Node<Message, Layout> {
             (Length::Fixed(w), Length::Fixed(h)) => XY(w, h),
             (_, _) => panic!(),
         };
-        dbg!(dbg!(self.shrink_width_pass()).grow_width_pass(root_size.0))
+        dbg!(dbg!(dbg!(self).shrink_width_pass()).grow_width_pass(root_size.0))
             .wrap()
             .shrink_height_pass()
             .grow_height_pass(root_size.1)
@@ -46,7 +46,7 @@ impl<Message> Node<Message, Layout> {
         let new_children_widths = new_children
             .iter()
             .map(|child| match dbg!(child.layout.width) {
-                ShrunkLength::Grow => dbg!(self.element.min_width()),
+                ShrunkLength::Grow => dbg!(child.element.min_width()),
                 ShrunkLength::Fixed(l) => l,
             });
         let new_width = match self.layout.width {
