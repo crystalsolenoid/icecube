@@ -26,11 +26,13 @@ impl<Message> Node<Message, Layout> {
             (Length::Fixed(w), Length::Fixed(h)) => XY(w, h),
             (_, _) => panic!(),
         };
-        dbg!(dbg!(dbg!(self).shrink_width_pass()).grow_width_pass(root_size.0))
+        dbg!(self
+            .shrink_width_pass()
+            .grow_width_pass(root_size.0)
             .wrap()
             .shrink_height_pass()
             .grow_height_pass(root_size.1)
-            .position_pass((0, 0))
+            .position_pass((0, 0)))
     }
 
     /// Render pass 1/3

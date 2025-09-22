@@ -35,7 +35,8 @@ fn view(state: &State) -> Node<Message, Layout> {
     let mut count_row = Node::new(Quad::new().border_color(RED_DARK).border_thickness(1))
         .row()
         .height(Length::Shrink);
-    let count = Node::new(Text::new(format!("{}", state.count)).with_font(font));
+    let mut count = Node::new(Text::new(format!("{}", state.count)).with_font(font));
+    count.name = Some("counter value".to_string());
     let mut count_container = Node::new(Quad::new());
     count_container.push(count);
 

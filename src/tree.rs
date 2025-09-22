@@ -31,6 +31,7 @@ impl<Message> Node<Message, Layout> {
         });
 
         Self {
+            name: Some("root".to_string()),
             layout: Layout {
                 width: Length::Fixed(width as u32),
                 height: Length::Fixed(height as u32),
