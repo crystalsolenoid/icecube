@@ -19,4 +19,7 @@ pub trait Element<Message> {
     fn min_width(&self) -> u32 {
         0
     }
+    fn min_height(&self, width: u32) -> u32 {
+        self.wrap(width).unwrap_or_default()
+    }
 }

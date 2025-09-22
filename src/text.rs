@@ -114,7 +114,7 @@ impl<Message> Element<Message> for Text {
     }
 
     fn min_width(&self) -> u32 {
-        dbg!(self.get_max_word_px())
+        self.get_max_word_px()
     }
 
     fn get_message(

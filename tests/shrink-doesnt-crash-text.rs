@@ -37,7 +37,7 @@ fn double_shrink_doesnt_crash_text() {
 }
 
 #[test]
-fn shrink_height_text() {
+fn shrink_height_text_grandchild() {
     //TODO: Simplify test
     let mut root: Node<(), _> = Node::root_node(320, 240).row();
 
@@ -66,5 +66,32 @@ fn shrink_height_text() {
     // these are the real tests
     assert!(r_count_row.layout.h > 0); // count_row
     assert!(r_count_container.layout.h > 0); // count_container
+    assert!(r_count.layout.h > 0); // count
+}
+
+#[test]
+fn shrink_height_text_child() {
+    //TODO: Simplify test
+    let mut root: Node<(), _> = Node::root_node(320, 240).row();
+
+    let mut count_row = Node::new(Quad::new()).height(Length::Shrink);
+    let mut count = Node::new(Text::new("12".to_string()));
+
+    // label for testing
+    count_row.name = Some("count row".to_string());
+    count.name = Some("count".to_string());
+
+    count_row.push(count);
+    root.push(count_row);
+
+    // these set up testing and make sure our setup was done right
+    let rendered = root.calculate_layout();
+    let r_count_row = &rendered.children[0];
+    assert_eq!(r_count_row.name, Some("count row".to_string()));
+    let r_count = &r_count_row.children[0];
+    assert_eq!(r_count.name, Some("count".to_string()));
+
+    // these are the real tests
+    assert!(r_count_row.layout.h > 0); // count_row
     assert!(r_count.layout.h > 0); // count
 }

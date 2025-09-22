@@ -1,3 +1,5 @@
+use std::cmp::max;
+
 use crate::tree::Node;
 
 mod length_types;
@@ -26,32 +28,28 @@ impl<Message> Node<Message, Layout> {
             (Length::Fixed(w), Length::Fixed(h)) => XY(w, h),
             (_, _) => panic!(),
         };
-        dbg!(self
-            .shrink_width_pass()
-            .grow_width_pass(root_size.0)
-            .wrap()
+        self.shrink_width_pass()
+            .grow_width_pass(root_size.0) /*.wrap()*/
             .shrink_height_pass()
             .grow_height_pass(root_size.1)
-            .position_pass((0, 0)))
+            .position_pass((0, 0))
     }
 
     /// Render pass 1/3
     /// bottom-up pass
     fn shrink_width_pass(self) -> Node<Message, ShrinkWidthLayout> {
-        dbg!(self.element.min_width());
+        self.element.min_width();
         let new_children: Vec<_> = self
             .children
             .into_iter()
             .map(|c| c.shrink_width_pass())
             .collect();
 
-        let new_children_widths = new_children
-            .iter()
-            .map(|child| match dbg!(child.layout.width) {
-                ShrunkLength::Grow => 0, //dbg!(child.element.min_width()),
-                ShrunkLength::GrowWithMin(m) => m,
-                ShrunkLength::Fixed(l) => l,
-            });
+        let new_children_widths = new_children.iter().map(|child| match child.layout.width {
+            ShrunkLength::Grow => 0,
+            ShrunkLength::GrowWithMin(m) => m,
+            ShrunkLength::Fixed(l) => l,
+        });
         let new_width = match self.layout.width {
             Length::Grow => match self.element.min_width() {
                 0 => ShrunkLength::Grow,
@@ -98,7 +96,8 @@ impl<Message> Node<Message, Layout> {
 impl<Message> Node<Message, GrownWidthLayout> {
     fn wrap(self) -> Self {
         let height = match self.element.wrap(self.layout.width) {
-            Some(h) => Length::Fixed(h),
+            // Some(h) => Length::Fixed(h),
+            Some(h) => Length::Grow,
             None => self.layout.height,
         };
 
@@ -106,6 +105,7 @@ impl<Message> Node<Message, GrownWidthLayout> {
 
         // TODO we're starting with making every text element have a fixed height that's its
         // minimum height after wrapping.
+        // Should it be GrowWithMin now?
 
         Node {
             layout: GrownWidthLayout {
@@ -136,7 +136,13 @@ impl<Message> Node<Message, GrownWidthLayout> {
             ShrunkLength::Fixed(l) => l,
         });
         let new_height = match self.layout.height {
-            Length::Grow => ShrunkLength::Grow,
+            Length::Grow => match max(
+                new_children_heights.max().unwrap_or_default(),
+                self.element.min_height(self.layout.width),
+            ) {
+                0 => ShrunkLength::Grow,
+                h => ShrunkLength::GrowWithMin(h),
+            },
             Length::Fixed(l) => ShrunkLength::Fixed(l),
             Length::Shrink => match self.layout.direction {
                 LayoutDirection::Column => {
@@ -268,7 +274,11 @@ impl<Message> Node<Message, ShrinkHeightLayout> {
             .children
             .iter()
             .filter(|c| match self.layout.direction {
-                LayoutDirection::Column => c.layout.height == ShrunkLength::Grow,
+                LayoutDirection::Column => match c.layout.height {
+                    ShrunkLength::Grow => true,
+                    ShrunkLength::GrowWithMin(_) => true,
+                    ShrunkLength::Fixed(_) => false,
+                },
                 LayoutDirection::Row => false,
             })
             .count()
@@ -282,7 +292,7 @@ impl<Message> Node<Message, ShrinkHeightLayout> {
                     .map(|c| match self.layout.direction {
                         LayoutDirection::Column => match c.layout.height {
                             ShrunkLength::Grow => 0,
-                            ShrunkLength::GrowWithMin(_) => todo!(), // probably copy width logic
+                            ShrunkLength::GrowWithMin(l) => l, // probably copy width logic
                             ShrunkLength::Fixed(l) => l,
                         },
                         LayoutDirection::Row => c.layout.width,
@@ -299,12 +309,18 @@ impl<Message> Node<Message, ShrinkHeightLayout> {
                     (LayoutDirection::Column, ShrunkLength::Grow) => {
                         remaining_length / child_grow_number
                     }
+                    (LayoutDirection::Column, ShrunkLength::GrowWithMin(m)) => {
+                        m + (remaining_length / child_grow_number)
+                    }
+
                     (LayoutDirection::Row, ShrunkLength::Grow) => {
                         assigned_height - flow_cross_padding.1
                     }
+                    (LayoutDirection::Row, ShrunkLength::GrowWithMin(m)) => {
+                        max(m, assigned_height - flow_cross_padding.1)
+                    }
 
                     (_, ShrunkLength::Fixed(l)) => l,
-                    _ => todo!(), // probably copy width logic
                 };
 
                 c.grow_height_pass(child_height)
