@@ -35,15 +35,14 @@ fn view(state: &State) -> Node<Message, Layout> {
     let mut count_row = Node::new(Quad::new().border_color(RED_DARK).border_thickness(1))
         .row()
         .height(Length::Shrink);
-    let mut count = Node::new(Text::new(format!("{}", state.count)).with_font(font));
+    let mut count =
+        Node::new(Text::new(format!("{}", state.count)).with_font(font)).width(Length::Shrink);
     count.name = Some("counter value".to_string());
-    let mut count_container = Node::new(Quad::new());
-    count_container.push(count);
 
     count_row.push(Node::new(
         Quad::new().border_color(RED_LIGHT).border_thickness(1),
     ));
-    count_row.push(count_container);
+    count_row.push(count);
     count_row.push(Node::new(
         Quad::new().border_color(RED_LIGHT).border_thickness(1),
     ));
@@ -52,9 +51,11 @@ fn view(state: &State) -> Node<Message, Layout> {
     let decrement = make_button("-".into(), Message::Decrement);
 
     let mut button_row = Node::new(Quad::new().border_color(RED_DARK).border_thickness(1)).row();
+    button_row.push(Node::new(Quad::new()));
     button_row.push(increment);
     button_row.push(Node::new(Quad::new()).width(Length::Fixed(2)));
     button_row.push(decrement);
+    button_row.push(Node::new(Quad::new()));
 
     container.push(Node::new(Quad::new()));
     container.push(count_row);

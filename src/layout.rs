@@ -62,15 +62,20 @@ impl<Message> Node<Message, Layout> {
                     let l: u32 = new_children_widths.sum();
                     let total_spacing =
                         new_children.len().saturating_sub(1) as u32 * self.layout.spacing;
+
+                    let element_min_width = self.element.min_width();
                     ShrunkLength::Fixed(
-                        l + self.layout.padding.left + self.layout.padding.right + total_spacing,
+                        (l + total_spacing).max(element_min_width)
+                            + self.layout.padding.left
+                            + self.layout.padding.right,
                     )
                 }
                 LayoutDirection::Column => {
+                    let element_min_width = self.element.min_width();
                     // Get max child width
                     let max_child_cross_length: u32 = new_children_widths.max().unwrap_or(0);
                     ShrunkLength::Fixed(
-                        max_child_cross_length
+                        (max_child_cross_length).max(element_min_width)
                             + self.layout.padding.left
                             + self.layout.padding.right,
                     )
