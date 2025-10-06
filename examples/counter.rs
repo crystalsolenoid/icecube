@@ -1,7 +1,7 @@
 use icecube::button::Button;
 use icecube::font::{self};
 use icecube::layout::{Layout, Length};
-use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_LIGHT, RED_DARK, RED_LIGHT};
+use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_LIGHT};
 use icecube::quad::Quad;
 use icecube::text::Text;
 use icecube::tree::Node;
@@ -32,25 +32,19 @@ fn view(state: &State) -> Node<Message, Layout> {
 
     let font = &font::BLACKLETTER;
 
-    let mut count_row = Node::new(Quad::new().border_color(RED_DARK).border_thickness(1))
-        .row()
-        .height(Length::Shrink);
+    let mut count_row = Node::new(Quad::new()).row().height(Length::Shrink);
     let mut count =
         Node::new(Text::new(format!("{}", state.count)).with_font(font)).width(Length::Shrink);
     count.name = Some("counter value".to_string());
 
-    count_row.push(Node::new(
-        Quad::new().border_color(RED_LIGHT).border_thickness(1),
-    ));
+    count_row.push(Node::new(Quad::new()));
     count_row.push(count);
-    count_row.push(Node::new(
-        Quad::new().border_color(RED_LIGHT).border_thickness(1),
-    ));
+    count_row.push(Node::new(Quad::new()));
 
     let increment = make_button("+".into(), Message::Increment);
     let decrement = make_button("-".into(), Message::Decrement);
 
-    let mut button_row = Node::new(Quad::new().border_color(RED_DARK).border_thickness(1)).row();
+    let mut button_row = Node::new(Quad::new()).row().padding(5);
     button_row.push(Node::new(Quad::new()));
     button_row.push(increment);
     button_row.push(Node::new(Quad::new()).width(Length::Fixed(2)));
@@ -77,13 +71,14 @@ fn make_button(label: String, action: Message) -> Node<Message, Layout> {
             .border_thickness(1)
             .border_color(BLUE_LIGHT),
     )
-    .width(Length::Grow) // TODO when this is shrink, the text has zero room. Why?
+    .width(Length::Shrink)
     .height(Length::Shrink)
-    .padding(2)
+    .padding([0, 6, 5, 6])
     .row();
     button_quad.push(button_text);
+
     let mut button_node = Node::new(Button::new().on_press(action))
-        .width(Length::Fixed(20))
+        .width(Length::Shrink)
         .height(Length::Shrink);
     button_node.push(button_quad);
     button_node

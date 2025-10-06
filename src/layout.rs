@@ -99,33 +99,6 @@ impl<Message> Node<Message, Layout> {
 }
 
 impl<Message> Node<Message, GrownWidthLayout> {
-    fn wrap(self) -> Self {
-        let height = match self.element.wrap(self.layout.width) {
-            // Some(h) => Length::Fixed(h),
-            Some(h) => Length::Grow,
-            None => self.layout.height,
-        };
-
-        let new_children: Vec<_> = self.children.into_iter().map(|c| c.wrap()).collect();
-
-        // TODO we're starting with making every text element have a fixed height that's its
-        // minimum height after wrapping.
-        // Should it be GrowWithMin now?
-
-        Node {
-            layout: GrownWidthLayout {
-                width: self.layout.width,
-                height,
-                padding: self.layout.padding,
-                direction: self.layout.direction,
-                spacing: self.layout.spacing,
-            },
-            children: new_children,
-            element: self.element,
-            name: self.name,
-        }
-    }
-
     /// Render pass 1/3
     /// bottom-up pass
     fn shrink_height_pass(self) -> Node<Message, ShrinkHeightLayout> {
