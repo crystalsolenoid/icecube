@@ -18,7 +18,7 @@ pub struct Image<'a> {
 }
 
 impl<'a> Image<'a> {
-    pub fn new(data: &'a [usize], width: usize, height: usize) -> Self {
+    pub fn new(data: &'a [usize], width: usize, height: usize) -> Image<'a> {
         Self {
             data,
             width,
@@ -33,7 +33,7 @@ impl<'a> Image<'a> {
     }
 }
 
-impl<'a, Message> Element<Message> for Image<'a> {
+impl<'a, Message> Element<'a, Message> for Image<'a> {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
         for j in 0..self.height {
             for i in 0..self.width {

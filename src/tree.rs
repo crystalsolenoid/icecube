@@ -6,14 +6,14 @@ use crate::{
     quad::{Quad, QuadStyle},
 };
 
-pub struct Node<Message, LayoutStage> {
-    pub children: Vec<Node<Message, LayoutStage>>,
-    pub element: Box<dyn Element<Message>>,
+pub struct Node<'a, Message, LayoutStage> {
+    pub children: Vec<Node<'a, Message, LayoutStage>>,
+    pub element: Box<dyn Element<'a, Message>>,
     pub layout: LayoutStage, //Option<CalculatedLayout>,
     pub name: Option<String>,
 }
 
-impl<Message, LayoutStage: Debug> Debug for Node<Message, LayoutStage> {
+impl<'a, Message, LayoutStage: Debug> Debug for Node<'a, Message, LayoutStage> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("")
             .field("name", &self.name)
@@ -23,7 +23,7 @@ impl<Message, LayoutStage: Debug> Debug for Node<Message, LayoutStage> {
     }
 }
 
-impl<Message> Node<Message, Layout> {
+impl<'a, Message> Node<'a, Message, Layout> {
     pub fn root_node(width: usize, height: usize) -> Self {
         let window = Quad::new().style(QuadStyle {
             fill_style: None, // TODO should this be setting the background?
@@ -44,7 +44,7 @@ impl<Message> Node<Message, Layout> {
         }
     }
 
-    pub fn new(element: impl Element<Message> + 'static) -> Self {
+    pub fn new(element: impl Element<'a, Message> + 'static) -> Self {
         Self {
             children: vec![],
             element: Box::new(element),
@@ -152,7 +152,7 @@ impl<Message> Node<Message, Layout> {
     */
 }
 
-impl<Message> Node<Message, CalculatedLayout> {
+impl<'a, Message> Node<'a, Message, CalculatedLayout> {
     pub fn draw_recursive(&self, frame: &mut [u8], _accum_position: (u32, u32)) {
         // TODO can we remove mut from self?
         self.element.draw(frame, self.layout);

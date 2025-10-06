@@ -82,7 +82,7 @@ impl Quad {
     }
 }
 
-impl<Message> Element<Message> for Quad {
+impl<'a, Message> Element<'a, Message> for Quad {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
         let position = (region.x, region.y); // TODO fix types mess
                                              //TODO: Consider optimizing this if it is a bottleneck

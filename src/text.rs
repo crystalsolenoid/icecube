@@ -49,7 +49,7 @@ impl Text {
     }
 }
 
-impl<Message> Element<Message> for Text {
+impl<'a, Message> Element<'a, Message> for Text {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
         let font = &self.font;
         let y_per_char = self.font.height() as u32 + self.y_spacing;

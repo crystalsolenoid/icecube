@@ -1,6 +1,6 @@
 use crate::layout::{CalculatedLayout, Layout};
 
-pub trait Element<Message> {
+pub trait Element<'a, Message> {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout);
     fn get_message(
         &self,

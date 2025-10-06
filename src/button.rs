@@ -35,7 +35,7 @@ impl<Message> Button<Message> {
     }
 }
 
-impl<Message: Clone> Element<Message> for Button<Message> {
+impl<'a, Message: Clone> Element<'a, Message> for Button<Message> {
     fn draw(&self, _frame: &mut [u8], _region: CalculatedLayout) {}
     fn get_message(&self, input: &Input, region: CalculatedLayout) -> Option<Message> {
         if let Some(mouse_pos) = input.mouse_pos {

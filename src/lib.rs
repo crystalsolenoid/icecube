@@ -23,24 +23,28 @@ pub mod quad;
 pub mod text;
 pub mod tree;
 
-pub fn run<State, Message, Update, View>(
+pub fn run<'a, State, Message, Update, View>(
     initial_state: State,
     update: Update,
     view: View,
     width: u32,
     height: u32,
     clear_color: Color,
-) -> Result<(), Error>
+)
+//-> Result<(), Error>
 //TODO: make a custom error type
 where
+    // State: 'a,
     Update: Fn(Message, &mut State),
-    View: Fn(&State) -> Node<Message, Layout>,
+    View: Fn(&State) -> Node<'a, Message, Layout>,
+    Message: Default,
 {
     env_logger::init();
 
     let mut state = initial_state;
 
     let event_loop = EventLoop::new().unwrap();
+    // let mut root = view(&state).calculate_layout();
     let mut winit_input = WinitInputHelper::new();
     let window = {
         // TODO: Consider default scaling
@@ -56,18 +60,24 @@ where
     let mut pixels = {
         let window_size = window.inner_size();
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
-        Pixels::new(width, height, surface_texture)?
+        Pixels::new(width, height, surface_texture).unwrap() //TODO: replace unwrap with ?
     };
-
     // TODO: Let Users specify the palette/ clear color
     let srgb = to_linear_rgb(clear_color);
     pixels.clear_color(srgb);
 
-    let mut root = view(&state).calculate_layout();
-
     let mut mouse_position: Result<(usize, usize), (isize, isize)> = Err((0, 0));
 
-    let res = event_loop.run(|event, elwt| {
+    let _ = event_loop.run(|event, elwt| {
+        let message = Message::default();
+
+        // start state mutable borrow
+        update(message, &mut state);
+        // end state mutable borrow
+
+        // start state immutable borrow
+        let root = view(&state).calculate_layout();
+
         // TODO: consider only calculating when necessary
         // Draw the current frame
         if let Event::WindowEvent {
@@ -76,7 +86,7 @@ where
         } = event
         {
             //world.draw(pixels.frame_mut());
-            root.draw_recursive(pixels.frame_mut(), (0, 0));
+            root.draw_recursive(pixels.frame_mut(), (width, height));
 
             if let Err(err) = pixels.render() {
                 log_error("pixels.render", err);
@@ -130,17 +140,47 @@ where
             let message = root.get_message(&input);
 
             // TODO handle multiple messages in a frame?
-            if let Some(message) = message {
-                update(message, &mut state);
-                root = view(&state).calculate_layout();
-            }
 
             // Update internal state and request a redraw
-            //            world.update();
-            window.request_redraw();
+            // world.update();
+            // window.request_redraw();
         }
+
+        // // TODO: consider only calculating when necessary
+        // // Draw the current frame
+        if let Event::WindowEvent {
+            event: WindowEvent::RedrawRequested,
+            ..
+        } = event
+        {
+            root.draw_recursive(pixels.frame_mut(), (0, 0));
+
+            if let Err(err) = pixels.render() {
+                log_error("pixels.render", err);
+                elwt.exit();
+                return;
+            }
+        };
+        if let Event::WindowEvent {
+            event:
+                WindowEvent::CursorMoved {
+                    device_id: _,
+                    position,
+                },
+            ..
+        } = event
+        {
+            // Convert it to a pixel location
+            mouse_position = pixels.window_pos_to_pixel(position.into());
+        }
+
+        window.request_redraw();
     });
-    res.map_err(|e| Error::UserDefined(Box::new(e)))
+    //
+
+    // }
+    // });
+    // res.map_err(|e| Error::UserDefined(Box::new(e)))
 }
 
 fn log_error<E: std::error::Error + 'static>(method_name: &str, err: E) {

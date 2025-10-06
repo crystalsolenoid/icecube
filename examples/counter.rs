@@ -6,8 +6,10 @@ use icecube::quad::Quad;
 use icecube::text::Text;
 use icecube::tree::Node;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 pub enum Message {
+    //TODO: get rid of default
+    #[default]
     Increment,
     Decrement,
 }
@@ -24,7 +26,7 @@ fn update(m: Message, state: &mut State) {
     }
 }
 
-fn view(state: &State) -> Node<Message, Layout> {
+fn view<'a>(state: &State) -> Node<'a, Message, Layout> {
     let mut root = Node::root_node(320, 240).row();
 
     // This fills the screen, causing the screen to clear each frame
@@ -63,7 +65,7 @@ fn view(state: &State) -> Node<Message, Layout> {
 }
 
 //TODO: Make an alias for LazyLock<FontType> and for Node
-fn make_button(label: String, action: Message) -> Node<Message, Layout> {
+fn make_button<'a>(label: String, action: Message) -> Node<'a, Message, Layout> {
     let button_text = Node::new(Text::new(label).with_font(&font::BLACKLETTER));
     let mut button_quad = Node::new(
         Quad::new()
@@ -84,8 +86,9 @@ fn make_button(label: String, action: Message) -> Node<Message, Layout> {
     button_node
 }
 
-fn main() -> Result<(), pixels::Error> {
+fn main() {
+    //-> Result<(), pixels::Error> {
     let initial_state = State::default();
 
-    icecube::run(initial_state, update, view, 320, 240, MAIN_LIGHT)
+    icecube::run(initial_state, update, view, 320, 240, MAIN_LIGHT);
 }
