@@ -95,6 +95,7 @@ impl<Message> Element<Message> for Text {
             });
     }
 
+    //TODO: Dead code
     fn wrap(&self, width: u32) -> Option<u32> {
         let hard_wrap = false;
         if hard_wrap {

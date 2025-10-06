@@ -28,7 +28,7 @@ impl<Message> Node<Message, Layout> {
             (Length::Fixed(w), Length::Fixed(h)) => XY(w, h),
             (_, _) => panic!(),
         };
-        self.shrink_width_pass()
+        dbg!(self.shrink_width_pass())
             .grow_width_pass(root_size.0) /*.wrap()*/
             .shrink_height_pass()
             .grow_height_pass(root_size.1)
@@ -129,14 +129,16 @@ impl<Message> Node<Message, GrownWidthLayout> {
                     let total_spacing =
                         new_children.len().saturating_sub(1) as u32 * self.layout.spacing;
                     ShrunkLength::Fixed(
-                        l + self.layout.padding.top + self.layout.padding.bottom + total_spacing,
+                        (l + total_spacing).max(self.element.min_height(self.layout.width))
+                            + self.layout.padding.top
+                            + self.layout.padding.bottom,
                     )
                 }
                 LayoutDirection::Row => {
                     // Get max child height
                     let max_child_cross_length: u32 = new_children_heights.max().unwrap_or(0);
                     ShrunkLength::Fixed(
-                        max_child_cross_length
+                        max_child_cross_length.max(self.element.min_height(self.layout.width))
                             + self.layout.padding.top
                             + self.layout.padding.bottom,
                     )
