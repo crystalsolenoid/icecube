@@ -1,3 +1,4 @@
+use icecube::button::Button;
 use icecube::image::Image;
 use icecube::layout::{Layout, Length};
 use icecube::palette::{BLUE_DARK, MAIN_LIGHT};
@@ -5,38 +6,67 @@ use icecube::quad::Quad;
 use icecube::tree::Node;
 
 #[derive(Debug, Copy, Clone)]
-pub enum Message {}
+pub enum Message {
+    Invert,
+}
 
 struct State {
-    data: [usize; 12],
+    data: Vec<usize>,
 }
 
 impl Default for State {
     fn default() -> Self {
         Self {
-            data: [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+            data: vec![0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
         }
     }
 }
 
-fn update(_m: Message, _state: &mut State) {}
+impl State {
+    fn invert(&mut self) {
+        self.data = self
+            .data
+            .iter()
+            .map(|px| match px {
+                0 => 1,
+                1 => 0,
+                _ => 0,
+            })
+            .collect();
+    }
+}
+
+fn update(m: Message, state: &mut State) {
+    match m {
+        Message::Invert => state.invert(),
+    }
+}
 
 fn view(state: &State) -> Node<Message, Layout> {
     //TODO: width height here, but height width in padding
     let mut root = Node::root_node(320, 240).row();
 
     // This fills the screen, causing the screen to clear each frame
-    let mut container = Node::new(Quad::new().fill(MAIN_LIGHT))
-        .column()
-        .padding([100, 140]);
+    let mut container = Node::new(Quad::new().fill(MAIN_LIGHT)).column();
+    let mut row = Node::new(Quad::new()).row().height(Length::Shrink);
 
-    let image = Node::new(Image::new(state.data.into(), 3, 4).scale_factor(1))
+    let image = Node::new(Image::new(state.data.clone(), 3, 4).scale_factor(8))
         .height(Length::Shrink)
         .width(Length::Shrink);
 
-    container.push(Node::new(Quad::new().fill(BLUE_DARK)).height(Length::Fixed(50)));
-    container.push(image);
-    container.push(Node::new(Quad::new().fill(BLUE_DARK)).height(Length::Fixed(50)));
+    container.push(Node::new(Quad::new()));
+
+    let mut button = Node::new(Button::new().on_press(Message::Invert))
+        .height(Length::Shrink)
+        .width(Length::Shrink);
+    button.push(image);
+
+    row.push(Node::new(Quad::new()));
+    row.push(button);
+    row.push(Node::new(Quad::new()));
+    container.push(row);
+
+    container.push(Node::new(Quad::new()));
     root.push(container);
     root
 }
