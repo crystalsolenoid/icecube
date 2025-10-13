@@ -7,20 +7,17 @@ use icecube::tree::Node;
 #[derive(Debug, Copy, Clone)]
 pub enum Message {}
 
-#[derive(Default)]
 struct State {
-    // data: [usize; 12],
+    data: [usize; 12],
 }
 
-const DATA: [usize; 12] = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1];
-
-// impl Default for State {
-//     fn default() -> Self {
-//         Self {
-//             data: [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-//         }
-//     }
-// }
+impl Default for State {
+    fn default() -> Self {
+        Self {
+            data: [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+        }
+    }
+}
 
 fn update(_m: Message, _state: &mut State) {}
 
@@ -33,7 +30,7 @@ fn view(state: &State) -> Node<Message, Layout> {
         .column()
         .padding([100, 140]);
 
-    let image = Node::new(Image::new(&DATA, 3, 4).scale_factor(1))
+    let image = Node::new(Image::new(state.data.into(), 3, 4).scale_factor(1))
         .height(Length::Shrink)
         .width(Length::Shrink);
 
