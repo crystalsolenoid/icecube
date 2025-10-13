@@ -8,8 +8,8 @@ use crate::palette::color_from_index;
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
 
 #[derive(Clone)]
-pub struct Image<'a> {
-    pub data: &'a [usize],
+pub struct Image {
+    pub data: Vec<usize>,
     pub scale_factor: usize,
     /// image width before scaling
     pub width: usize,
@@ -17,8 +17,8 @@ pub struct Image<'a> {
     pub height: usize,
 }
 
-impl<'a> Image<'a> {
-    pub fn new(data: &'a [usize], width: usize, height: usize) -> Image<'a> {
+impl Image {
+    pub fn new(data: Vec<usize>, width: usize, height: usize) -> Image {
         Self {
             data,
             width,
@@ -33,7 +33,7 @@ impl<'a> Image<'a> {
     }
 }
 
-impl<'a, Message> Element<'a, Message> for Image<'a> {
+impl<'a, Message> Element<'a, Message> for Image {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
         for j in 0..self.height {
             for i in 0..self.width {

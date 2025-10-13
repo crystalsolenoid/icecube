@@ -23,164 +23,136 @@ pub mod quad;
 pub mod text;
 pub mod tree;
 
-pub fn run<'a, State, Message, Update, View>(
-    initial_state: State,
-    update: Update,
-    view: View,
-    width: u32,
-    height: u32,
-    clear_color: Color,
-)
-//-> Result<(), Error>
-//TODO: make a custom error type
+pub struct Runtime<State> {
+    pub state: State,
+}
+
+impl<'a, State> Runtime<State>
 where
-    // State: 'a,
-    Update: Fn(Message, &mut State),
-    View: Fn(&State) -> Node<'a, Message, Layout>,
-    Message: Default,
+    State: 'a,
 {
-    env_logger::init();
+    pub fn start<Message, Update, View, Init>(
+        &'a mut self,
+        init: Init,
+        update: Update,
+        view: View,
+        width: u32,
+        height: u32,
+        clear_color: Color,
+    )
+    //-> Result<(), Error>
+    //TODO: make a custom error type
+    where
+        Update: Fn(Message, &mut State) + 'static,
+        Init: FnOnce() -> State + 'static,
+        View: Fn(&'a State) -> Node<'a, Message, Layout> + 'static,
+    {
+        env_logger::init();
 
-    let mut state = initial_state;
+        self.state = init();
 
-    let event_loop = EventLoop::new().unwrap();
-    // let mut root = view(&state).calculate_layout();
-    let mut winit_input = WinitInputHelper::new();
-    let window = {
-        // TODO: Consider default scaling
-        let size = LogicalSize::new(2.0 * width as f64, 2.0 * height as f64);
-        WindowBuilder::new()
-            .with_title("Hello Pixels")
-            .with_inner_size(size)
-            .with_min_inner_size(size)
-            .build(&event_loop)
-            .unwrap()
-    };
+        let event_loop = EventLoop::new().unwrap();
+        let mut winit_input = WinitInputHelper::new();
+        let window = {
+            // TODO: Consider default scaling
+            let size = LogicalSize::new(2.0 * width as f64, 2.0 * height as f64);
+            WindowBuilder::new()
+                .with_title("Hello Pixels")
+                .with_inner_size(size)
+                .with_min_inner_size(size)
+                .build(&event_loop)
+                .unwrap()
+        };
 
-    let mut pixels = {
-        let window_size = window.inner_size();
-        let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
-        Pixels::new(width, height, surface_texture).unwrap() //TODO: replace unwrap with ?
-    };
-    // TODO: Let Users specify the palette/ clear color
-    let srgb = to_linear_rgb(clear_color);
-    pixels.clear_color(srgb);
+        let mut pixels = {
+            let window_size = window.inner_size();
+            let surface_texture =
+                SurfaceTexture::new(window_size.width, window_size.height, &window);
+            Pixels::new(width, height, surface_texture).unwrap() //todo ?
+        };
 
-    let mut mouse_position: Result<(usize, usize), (isize, isize)> = Err((0, 0));
+        // TODO: Let Users specify the palette/ clear color
+        let srgb = to_linear_rgb(clear_color);
+        pixels.clear_color(srgb);
 
-    let _ = event_loop.run(|event, elwt| {
-        let message = Message::default();
+        let mut mouse_position: Result<(usize, usize), (isize, isize)> = Err((0, 0));
 
-        // start state mutable borrow
-        update(message, &mut state);
-        // end state mutable borrow
+        let res = event_loop.run(|event, elwt| {
+            let root = view(&self.state).calculate_layout();
+            // TODO: consider only calculating when necessary
+            // Draw the current frame
+            if let Event::WindowEvent {
+                event: WindowEvent::RedrawRequested,
+                ..
+            } = event
+            {
+                //world.draw(pixels.frame_mut());
+                root.draw_recursive(pixels.frame_mut(), (0, 0));
 
-        // start state immutable borrow
-        let root = view(&state).calculate_layout();
-
-        // TODO: consider only calculating when necessary
-        // Draw the current frame
-        if let Event::WindowEvent {
-            event: WindowEvent::RedrawRequested,
-            ..
-        } = event
-        {
-            //world.draw(pixels.frame_mut());
-            root.draw_recursive(pixels.frame_mut(), (width, height));
-
-            if let Err(err) = pixels.render() {
-                log_error("pixels.render", err);
-                elwt.exit();
-                return;
-            }
-        }
-
-        if let Event::WindowEvent {
-            event:
-                WindowEvent::CursorMoved {
-                    device_id: _,
-                    position,
-                },
-            ..
-        } = event
-        {
-            // Convert it to a pixel location
-            mouse_position = pixels.window_pos_to_pixel(position.into());
-        }
-
-        // Handle input events
-        if winit_input.update(&event) {
-            // Close events
-            if winit_input.key_pressed(KeyCode::Escape) || winit_input.close_requested() {
-                elwt.exit();
-                return;
-            }
-
-            // Resize the window
-            if let Some(size) = winit_input.window_resized() {
-                if let Err(err) = pixels.resize_surface(size.width, size.height) {
-                    log_error("pixels.resize_surface", err);
+                if let Err(err) = pixels.render() {
+                    log_error("pixels.render", err);
                     elwt.exit();
                     return;
                 }
             }
 
-            // build input struct
-            let input_mouse_pos = if let Ok((x, y)) = mouse_position {
-                Some((x as u32, y as u32))
-            } else {
-                None
-            };
-            let input = crate::button::Input {
-                mouse_released: winit_input.mouse_released(0),
-                mouse_pos: input_mouse_pos,
-            };
-
-            // get a message, if any
-            let message = root.get_message(&input);
-
-            // TODO handle multiple messages in a frame?
-
-            // Update internal state and request a redraw
-            // world.update();
-            // window.request_redraw();
-        }
-
-        // // TODO: consider only calculating when necessary
-        // // Draw the current frame
-        if let Event::WindowEvent {
-            event: WindowEvent::RedrawRequested,
-            ..
-        } = event
-        {
-            root.draw_recursive(pixels.frame_mut(), (0, 0));
-
-            if let Err(err) = pixels.render() {
-                log_error("pixels.render", err);
-                elwt.exit();
-                return;
+            if let Event::WindowEvent {
+                event:
+                    WindowEvent::CursorMoved {
+                        device_id: _,
+                        position,
+                    },
+                ..
+            } = event
+            {
+                // Convert it to a pixel location
+                mouse_position = pixels.window_pos_to_pixel(position.into());
             }
-        };
-        if let Event::WindowEvent {
-            event:
-                WindowEvent::CursorMoved {
-                    device_id: _,
-                    position,
-                },
-            ..
-        } = event
-        {
-            // Convert it to a pixel location
-            mouse_position = pixels.window_pos_to_pixel(position.into());
-        }
 
-        window.request_redraw();
-    });
-    //
+            // Handle input events
+            if winit_input.update(&event) {
+                // Close events
+                if winit_input.key_pressed(KeyCode::Escape) || winit_input.close_requested() {
+                    elwt.exit();
+                    return;
+                }
 
-    // }
-    // });
-    // res.map_err(|e| Error::UserDefined(Box::new(e)))
+                // Resize the window
+                if let Some(size) = winit_input.window_resized() {
+                    if let Err(err) = pixels.resize_surface(size.width, size.height) {
+                        log_error("pixels.resize_surface", err);
+                        elwt.exit();
+                        return;
+                    }
+                }
+
+                // build input struct
+                let input_mouse_pos = if let Ok((x, y)) = mouse_position {
+                    Some((x as u32, y as u32))
+                } else {
+                    None
+                };
+                let input = crate::button::Input {
+                    mouse_released: winit_input.mouse_released(0),
+                    mouse_pos: input_mouse_pos,
+                };
+
+                // get a message, if any
+                // let message = root.get_message(&input);
+
+                // TODO handle multiple messages in a frame?
+                // if let Some(message) = message {
+                //     update(message, &mut state);
+                //     // root = view(&state).calculate_layout();
+                // }
+
+                // Update internal state and request a redraw
+                //            world.update();
+                window.request_redraw();
+            }
+        });
+        // res.map_err(|e| Error::UserDefined(Box::new(e)))
+    }
 }
 
 fn log_error<E: std::error::Error + 'static>(method_name: &str, err: E) {
