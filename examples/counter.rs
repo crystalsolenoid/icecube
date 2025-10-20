@@ -28,37 +28,42 @@ fn view(state: &State) -> Node<Message, Layout> {
     let mut root = Node::root_node(320, 240).row();
 
     // This fills the screen, causing the screen to clear each frame
-    let mut container = Node::new(Quad::new().fill(MAIN_LIGHT)).column();
+    let mut container = Node::new(Quad::new().fill(MAIN_LIGHT))
+        .column()
+        .height(Length::Grow);
 
     let font = &font::BLACKLETTER;
 
-    let mut count_row = Node::new(Quad::new()).row().height(Length::Shrink);
+    let mut count_row = Node::new(Quad::new())
+        .row()
+        .width(Length::Grow)
+        .height(Length::Shrink);
     let mut count =
         Node::new(Text::new(format!("{}", state.count)).with_font(font)).width(Length::Shrink);
     count.name = Some("counter value".to_string());
 
-    count_row.push(Node::new(Quad::new()));
+    count_row.push(Node::spacer());
     count_row.push(count);
-    count_row.push(Node::new(Quad::new()));
+    count_row.push(Node::spacer());
 
     let increment = make_button("+".into(), Message::Increment);
     let decrement = make_button("-".into(), Message::Decrement);
 
     let mut button_row = Node::new(Quad::new()).row().padding(5);
-    button_row.push(Node::new(Quad::new()));
+    button_row.push(Node::spacer());
     button_row.push(increment);
     button_row.push(Node::new(Quad::new()).width(Length::Fixed(2)));
     button_row.push(decrement);
-    button_row.push(Node::new(Quad::new()));
+    button_row.push(Node::spacer());
 
-    container.push(Node::new(Quad::new()));
+    container.push(Node::spacer());
     container.push(count_row);
     container.push(button_row);
-    container.push(Node::new(Quad::new()));
+    container.push(Node::spacer());
 
-    root.push(Node::new(Quad::new()));
+    root.push(Node::spacer());
     root.push(container);
-    root.push(Node::new(Quad::new()));
+    root.push(Node::spacer());
     root
 }
 

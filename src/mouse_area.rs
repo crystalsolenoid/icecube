@@ -43,7 +43,10 @@ impl<Message> Element<Message> for MouseArea<Message> {
         if let Some(mouse_pos) = input.mouse_pos {
             if input.mouse_released && region.contains(mouse_pos) {
                 if let Some(on_press) = &self.on_press {
-                    Some((on_press)((mouse_pos.0 as usize, mouse_pos.1 as usize)))
+                    Some((on_press)((
+                        (mouse_pos.0 - region.x) as usize,
+                        (mouse_pos.1 - region.y) as usize,
+                    )))
                 } else {
                     None
                 }

@@ -1,7 +1,7 @@
 use icecube::button::Button;
 use icecube::image::Image;
 use icecube::layout::{Layout, Length};
-use icecube::palette::{BLUE_DARK, MAIN_LIGHT};
+use icecube::palette::MAIN_LIGHT;
 use icecube::quad::Quad;
 use icecube::tree::Node;
 
@@ -47,26 +47,32 @@ fn view(state: &State) -> Node<Message, Layout> {
     let mut root = Node::root_node(320, 240).row();
 
     // This fills the screen, causing the screen to clear each frame
-    let mut container = Node::new(Quad::new().fill(MAIN_LIGHT)).column();
-    let mut row = Node::new(Quad::new()).row().height(Length::Shrink);
+    let mut container = Node::new(Quad::new().fill(MAIN_LIGHT))
+        .width(Length::Grow)
+        .height(Length::Grow)
+        .column();
+    let mut row = Node::new(Quad::new())
+        .row()
+        .width(Length::Grow)
+        .height(Length::Shrink);
 
     let image = Node::new(Image::new(state.data.clone(), 3, 4).scale_factor(8))
         .height(Length::Shrink)
         .width(Length::Shrink);
 
-    container.push(Node::new(Quad::new()));
+    container.push(Node::spacer());
 
     let mut button = Node::new(Button::new().on_press(Message::Invert))
         .height(Length::Shrink)
         .width(Length::Shrink);
     button.push(image);
 
-    row.push(Node::new(Quad::new()));
+    row.push(Node::spacer());
     row.push(button);
-    row.push(Node::new(Quad::new()));
+    row.push(Node::spacer());
     container.push(row);
 
-    container.push(Node::new(Quad::new()));
+    container.push(Node::spacer());
     root.push(container);
     root
 }

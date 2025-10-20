@@ -24,6 +24,7 @@ WISHLIST
 
 const WIDTH: usize = 32;
 const HEIGHT: usize = 32;
+const SCALE_FACTOR: usize = 4;
 
 #[derive(Debug, Copy, Clone)]
 pub enum Message {
@@ -31,6 +32,7 @@ pub enum Message {
     Glider,
     Clear,
     Randomize,
+    BoardClick((usize, usize)),
 }
 
 #[derive(Default)]
@@ -184,6 +186,9 @@ fn update(m: Message, state: &mut State) {
         Message::Glider => state.board.spawn_glider((1, 1)),
         Message::Clear => state.board.clear(),
         Message::Randomize => state.board.randomize(),
+        Message::BoardClick(pos) => state
+            .board
+            .toggle((pos.0 / SCALE_FACTOR, pos.1 / SCALE_FACTOR)),
     }
 }
 
@@ -280,7 +285,7 @@ fn view(state: &State) -> Node<Message, Layout> {
             state.board.width,
             state.board.height,
         )
-        .scale_factor(4),
+        .scale_factor(SCALE_FACTOR),
     )
     .height(Length::Shrink)
     .width(Length::Shrink);
@@ -297,8 +302,9 @@ fn view(state: &State) -> Node<Message, Layout> {
     .width(Length::Shrink)
     .padding(10);
 
-    let mut mouse_image_wrapper: Node<Message, _> =
-        MouseArea::new().on_press(|_| Message::Step).into();
+    let mut mouse_image_wrapper: Node<Message, _> = MouseArea::new()
+        .on_press(|pos| Message::BoardClick(pos))
+        .into();
 
     mouse_image_wrapper.push(image);
 

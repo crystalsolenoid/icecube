@@ -97,7 +97,11 @@ fn build_ui_tree(state: &State) -> Node<Message, Layout> {
         .height(Length::Shrink)
         .padding(2)
         .row();
-        container.push(Node::new(Text::new(label.into()).with_font(font)));
+        container.push(
+            Node::new(Text::new(label.into()).with_font(font))
+                .width(Length::Grow)
+                .height(Length::Grow),
+        );
         container
     };
 
