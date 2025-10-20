@@ -33,11 +33,14 @@ pub enum Message {
     Clear,
     Randomize,
     BoardClick((usize, usize)),
+    BoardHover((usize, usize)),
+    BoardExit,
 }
 
 #[derive(Default)]
 struct State {
     board: Board,
+    hover_position: Option<(usize, usize)>,
 }
 
 struct Board {
@@ -186,9 +189,11 @@ fn update(m: Message, state: &mut State) {
         Message::Glider => state.board.spawn_glider((1, 1)),
         Message::Clear => state.board.clear(),
         Message::Randomize => state.board.randomize(),
-        Message::BoardClick(pos) => state
-            .board
-            .toggle((pos.0 / SCALE_FACTOR, pos.1 / SCALE_FACTOR)),
+        Message::BoardClick(pos) => state.board.toggle(state.hover_position.unwrap_or(pos)),
+        Message::BoardHover(pos) => {
+            state.hover_position = Some((pos.0 / SCALE_FACTOR, pos.1 / SCALE_FACTOR));
+        }
+        Message::BoardExit => state.hover_position = None,
     }
 }
 
@@ -271,21 +276,22 @@ fn view(state: &State) -> Node<Message, Layout> {
     button_quad.push(glider_button_text);
     glider_button.push(button_quad);
 
+    let mut image_data: Vec<_> = state
+        .board
+        .cells
+        .iter()
+        .map(|c| match c {
+            true => 0,
+            false => 1,
+        })
+        .collect();
+
+    if let Some(hover_position) = state.hover_position {
+        image_data[hover_position.0 + hover_position.1 * state.board.height] = 2;
+    }
+
     let image = Node::new(
-        Image::new(
-            state
-                .board
-                .cells
-                .iter()
-                .map(|c| match c {
-                    true => 0,
-                    false => 1,
-                })
-                .collect(),
-            state.board.width,
-            state.board.height,
-        )
-        .scale_factor(SCALE_FACTOR),
+        Image::new(image_data, state.board.width, state.board.height).scale_factor(SCALE_FACTOR),
     )
     .height(Length::Shrink)
     .width(Length::Shrink);
@@ -304,6 +310,8 @@ fn view(state: &State) -> Node<Message, Layout> {
 
     let mut mouse_image_wrapper: Node<Message, _> = MouseArea::new()
         .on_press(|pos| Message::BoardClick(pos))
+        .on_hover(|pos| Message::BoardHover(pos))
+        .on_exit(|| Message::BoardExit)
         .into();
 
     mouse_image_wrapper.push(image);

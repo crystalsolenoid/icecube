@@ -119,7 +119,7 @@ impl<Message> Element<Message> for Text {
     }
 
     fn get_message(
-        &self,
+        &mut self,
         _input: &crate::button::Input,
         _region: CalculatedLayout,
     ) -> Option<Message> {

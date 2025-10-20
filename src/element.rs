@@ -3,7 +3,7 @@ use crate::layout::{CalculatedLayout, Layout};
 pub trait Element<Message> {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout);
     fn get_message(
-        &self,
+        &mut self,
         input: &crate::button::Input,
         region: CalculatedLayout,
     ) -> Option<Message>;

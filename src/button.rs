@@ -37,7 +37,7 @@ impl<Message> Button<Message> {
 
 impl<Message: Clone> Element<Message> for Button<Message> {
     fn draw(&self, _frame: &mut [u8], _region: CalculatedLayout) {}
-    fn get_message(&self, input: &Input, region: CalculatedLayout) -> Option<Message> {
+    fn get_message(&mut self, input: &Input, region: CalculatedLayout) -> Option<Message> {
         if let Some(mouse_pos) = input.mouse_pos {
             if input.mouse_released && region.contains(mouse_pos) {
                 self.on_press.clone()

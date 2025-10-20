@@ -76,7 +76,7 @@ impl<Message> Element<Message> for Image {
     }
 
     fn get_message(
-        &self,
+        &mut self,
         _input: &crate::button::Input,
         _region: CalculatedLayout,
     ) -> Option<Message> {
