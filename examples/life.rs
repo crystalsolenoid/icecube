@@ -2,7 +2,8 @@ use icecube::button::Button;
 use icecube::font;
 use icecube::image::Image;
 use icecube::layout::{Layout, Length};
-use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_LIGHT, RED_DARK};
+use icecube::mouse_area::MouseArea;
+use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_LIGHT};
 use icecube::quad::Quad;
 use icecube::text::Text;
 use icecube::tree::Node;
@@ -191,13 +192,14 @@ fn view(state: &State) -> Node<Message, Layout> {
     let mut root = Node::root_node(320, 240).row();
 
     // This fills the screen, causing the screen to clear each frame
-    let mut container = Node::new(Quad::new().fill(MAIN_LIGHT)).column().spacing(10);
+    let mut container = Node::new(Quad::new().fill(MAIN_LIGHT))
+        .column()
+        .spacing(10)
+        .width(Length::Grow)
+        .height(Length::Grow);
 
-    let mut row1 = Node::new(Quad::new()).row().height(Length::Shrink);
-    let mut row2 = Node::new(Quad::new())
-        .row()
-        .height(Length::Shrink)
-        .spacing(10);
+    let mut row1 = Node::spacer().row().height(Length::Shrink);
+    let mut row2 = Node::spacer().row().height(Length::Shrink).spacing(10);
 
     let step_button_text = Node::new(Text::new("Step".into()).with_font(&font::BLACKLETTER));
     let mut step_button = Node::new(Button::new().on_press(Message::Step))
@@ -294,26 +296,28 @@ fn view(state: &State) -> Node<Message, Layout> {
     .height(Length::Shrink)
     .width(Length::Shrink)
     .padding(10);
-    let mut button = Node::new(Button::new().on_press(Message::Step))
-        .height(Length::Shrink)
-        .width(Length::Shrink);
-    button.push(image);
-    wrapper.push(button);
 
-    row1.push(Node::new(Quad::new()));
+    let mut mouse_image_wrapper: Node<Message, _> =
+        MouseArea::new().on_press(|_| Message::Step).into();
+
+    mouse_image_wrapper.push(image);
+
+    wrapper.push(mouse_image_wrapper);
+
+    row1.push(Node::spacer());
     row1.push(wrapper);
-    row1.push(Node::new(Quad::new()));
+    row1.push(Node::spacer());
     container.push(row1);
 
-    row2.push(Node::new(Quad::new()));
+    row2.push(Node::spacer());
     row2.push(step_button);
     row2.push(glider_button);
     row2.push(randomize_button);
     row2.push(clear_button);
-    row2.push(Node::new(Quad::new()));
+    row2.push(Node::spacer());
     container.push(row2);
 
-    container.push(Node::new(Quad::new()));
+    container.push(Node::spacer());
     root.push(container);
     root
 }

@@ -15,8 +15,8 @@ pub(super) type GrownLength = u32;
 
 #[derive(Clone, Copy, Default, Debug)]
 pub enum Length {
-    #[default]
     Grow,
+    #[default]
     Shrink,
     Fixed(u32),
 }

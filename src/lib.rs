@@ -18,6 +18,7 @@ pub mod element;
 pub mod font;
 pub mod image;
 pub mod layout;
+pub mod mouse_area;
 pub mod palette;
 pub mod quad;
 pub mod text;

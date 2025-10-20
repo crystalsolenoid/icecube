@@ -55,6 +55,19 @@ impl<Message> Node<Message, Layout> {
         }
     }
 
+    pub fn spacer() -> Self {
+        Self {
+            children: vec![],
+            element: Box::new(Quad::new()),
+            layout: Layout {
+                width: Length::Grow,
+                height: Length::Grow,
+                ..Layout::default()
+            },
+            name: None,
+        }
+    }
+
     pub fn width(self, width: Length) -> Self {
         // TODO make Length implement from u32
         Self {
@@ -116,8 +129,8 @@ impl<Message> Node<Message, Layout> {
         }
     }
 
-    pub fn push(&mut self, child: Self) {
-        self.children.push(child);
+    pub fn push(&mut self, child: impl Into<Self>) {
+        self.children.push(child.into());
     }
 
     /*

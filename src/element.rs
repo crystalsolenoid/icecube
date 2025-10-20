@@ -1,4 +1,7 @@
-use crate::layout::{CalculatedLayout, Layout};
+use crate::{
+    layout::{CalculatedLayout, Layout},
+    tree::Node,
+};
 
 pub trait Element<Message> {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout);
