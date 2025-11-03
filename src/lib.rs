@@ -1,3 +1,5 @@
+use std::time::{Duration, Instant};
+
 use error_iter::ErrorIter as _;
 use log::error;
 use pixels::{wgpu, Error, Pixels, SurfaceTexture};
@@ -33,24 +35,28 @@ pub struct Input {
     pub prev_mouse_pos: Option<(u32, u32)>,
 }
 
-pub fn run<State, Message, Update, View>(
+pub fn run<State, Message, Update, View, Timer>(
     initial_state: State,
     update: Update,
     view: View,
     width: u32,
     height: u32,
     clear_color: Color,
+    timer: Timer, // TODO turn this into an optional thing / run into a struct
 ) -> Result<(), Error>
 //TODO: make a custom error type
 where
     Update: Fn(Message, &mut State),
     View: Fn(&State) -> Node<Message, Layout>,
+    Timer: Fn(Duration) -> Option<Message>,
 {
     env_logger::init();
 
     let mut state = initial_state;
 
     let mut old_input: Option<Input> = None;
+
+    let mut time_of_last_timer = Instant::now();
 
     let event_loop = EventLoop::new().unwrap();
     let mut winit_input = WinitInputHelper::new();
@@ -147,7 +153,15 @@ where
             };
 
             // get a message, if any
-            let message = root.get_message(&input);
+            let message = match root.get_message(&input) {
+                Some(msg) => Some(msg),
+                None => {
+                    let now = Instant::now();
+                    let d = now - time_of_last_timer;
+                    time_of_last_timer = now;
+                    timer(d)
+                }
+            };
 
             // TODO handle multiple messages in a frame?
             if let Some(message) = message {

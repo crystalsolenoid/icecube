@@ -198,5 +198,5 @@ fn view(state: &State) -> Node<Message, Layout> {
 fn main() -> Result<(), pixels::Error> {
     let initial_state = State::default();
 
-    icecube::run(initial_state, update, view, 320, 240, MAIN_DARK)
+    icecube::run(initial_state, update, view, 320, 240, MAIN_DARK, |_| None)
 }

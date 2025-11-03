@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use icecube::button::Button;
 use icecube::font;
 use icecube::image::Image;
@@ -35,12 +37,26 @@ pub enum Message {
     BoardClick((usize, usize)),
     BoardHover((usize, usize)),
     BoardExit,
+    TimeElapsed(Duration),
+    Pause,
 }
 
-#[derive(Default)]
 struct State {
     board: Board,
     hover_position: Option<(usize, usize)>,
+    timer: Duration,
+    paused: bool,
+}
+
+impl Default for State {
+    fn default() -> Self {
+        Self {
+            board: Default::default(),
+            hover_position: Default::default(),
+            timer: Default::default(),
+            paused: true,
+        }
+    }
 }
 
 struct Board {
@@ -196,6 +212,14 @@ fn update(m: Message, state: &mut State) {
             state.hover_position = Some((pos.0 / SCALE_FACTOR, pos.1 / SCALE_FACTOR));
         }
         Message::BoardExit => state.hover_position = None,
+        Message::TimeElapsed(d) => {
+            state.timer += d;
+            if state.paused && state.timer > Duration::from_millis(250) {
+                state.board.step();
+                state.timer = Duration::ZERO;
+            }
+        }
+        Message::Pause => state.paused = !state.paused,
     }
 }
 
@@ -212,6 +236,7 @@ fn view(state: &State) -> Node<Message, Layout> {
 
     let mut row1 = Node::spacer().row().height(Length::Shrink);
     let mut row2 = Node::spacer().row().height(Length::Shrink).spacing(10);
+    let mut row3 = Node::spacer().row().height(Length::Shrink);
 
     let step_button_text = Node::new(Text::new("Step".into()).with_font(&font::BLACKLETTER));
     let mut step_button = Node::new(Button::new().on_press(Message::Step))
@@ -261,6 +286,26 @@ fn view(state: &State) -> Node<Message, Layout> {
     .padding([0 + 2, 6 + 2, 5 + 2, 6 + 2]);
     button_quad.push(randomize_button_text);
     randomize_button.push(button_quad);
+
+    let pause_str = match state.paused {
+        false => "Unpause",
+        true => "Pause",
+    };
+    let pause_button_text = Node::new(Text::new(pause_str.into()).with_font(&font::BLACKLETTER));
+    let mut pause_button = Node::new(Button::new().on_press(Message::Pause))
+        .height(Length::Shrink)
+        .width(Length::Shrink);
+    let mut button_quad = Node::new(
+        Quad::new()
+            .fill(MAIN_LIGHT)
+            .border_thickness(2)
+            .border_color(BLUE_DARK),
+    )
+    .width(Length::Shrink)
+    .height(Length::Shrink)
+    .padding([0 + 2, 6 + 2, 5 + 2, 6 + 2]);
+    button_quad.push(pause_button_text);
+    pause_button.push(button_quad);
 
     let glider_button_text = Node::new(Text::new("Glider".into()).with_font(&font::BLACKLETTER));
     let mut glider_button = Node::new(Button::new().on_press(Message::Glider))
@@ -333,6 +378,11 @@ fn view(state: &State) -> Node<Message, Layout> {
     row2.push(Node::spacer());
     container.push(row2);
 
+    row3.push(Node::spacer());
+    row3.push(pause_button);
+    row3.push(Node::spacer());
+    container.push(row3);
+
     container.push(Node::spacer());
     root.push(container);
     root
@@ -341,5 +391,7 @@ fn view(state: &State) -> Node<Message, Layout> {
 fn main() -> Result<(), pixels::Error> {
     let initial_state = State::default();
 
-    icecube::run(initial_state, update, view, 320, 240, MAIN_LIGHT)
+    icecube::run(initial_state, update, view, 320, 240, MAIN_LIGHT, |d| {
+        Some(Message::TimeElapsed(d))
+    })
 }
