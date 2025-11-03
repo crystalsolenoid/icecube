@@ -189,7 +189,9 @@ fn update(m: Message, state: &mut State) {
         Message::Glider => state.board.spawn_glider((1, 1)),
         Message::Clear => state.board.clear(),
         Message::Randomize => state.board.randomize(),
-        Message::BoardClick(pos) => state.board.toggle(state.hover_position.unwrap_or(pos)),
+        Message::BoardClick(pos) => state
+            .board
+            .enliven((pos.0 / SCALE_FACTOR, pos.1 / SCALE_FACTOR)),
         Message::BoardHover(pos) => {
             state.hover_position = Some((pos.0 / SCALE_FACTOR, pos.1 / SCALE_FACTOR));
         }
@@ -309,7 +311,7 @@ fn view(state: &State) -> Node<Message, Layout> {
     .padding(10);
 
     let mut mouse_image_wrapper: Node<Message, _> = MouseArea::new()
-        .on_press(|pos| Message::BoardClick(pos))
+        .whenever_down(|pos| Message::BoardClick(pos))
         .on_hover(|pos| Message::BoardHover(pos))
         .on_exit(|| Message::BoardExit)
         .into();

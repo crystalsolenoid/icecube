@@ -9,6 +9,7 @@ use crate::{
 pub struct MouseArea<Message> {
     /// Pressed on the most recent frame
     on_press: Option<Box<dyn Fn((usize, usize)) -> Message>>,
+    whenever_down: Option<Box<dyn Fn((usize, usize)) -> Message>>,
     on_hover: Option<Box<dyn Fn((usize, usize)) -> Message>>,
     on_exit: Option<Box<dyn Fn() -> Message>>,
 }
@@ -19,6 +20,7 @@ impl<Message> MouseArea<Message> {
             on_press: None,
             on_hover: None,
             on_exit: None,
+            whenever_down: None,
         }
     }
 
@@ -28,6 +30,15 @@ impl<Message> MouseArea<Message> {
         F: Fn((usize, usize)) -> Message + 'static,
     {
         self.on_press = Some(Box::new(m));
+        self
+    }
+
+    // TODO allow unsetting a message?
+    pub fn whenever_down<F>(mut self, m: F) -> Self
+    where
+        F: Fn((usize, usize)) -> Message + 'static,
+    {
+        self.whenever_down = Some(Box::new(m));
         self
     }
 
@@ -59,6 +70,14 @@ impl<Message> Element<Message> for MouseArea<Message> {
                 if input.mouse_released {
                     if let Some(on_press) = &self.on_press {
                         return Some((on_press)((
+                            (mouse_pos.0 - region.x) as usize,
+                            (mouse_pos.1 - region.y) as usize,
+                        )));
+                    }
+                }
+                if let Some(whenever_down) = &self.whenever_down {
+                    if input.mouse_down {
+                        return Some((whenever_down)((
                             (mouse_pos.0 - region.x) as usize,
                             (mouse_pos.1 - region.y) as usize,
                         )));
