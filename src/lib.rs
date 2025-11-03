@@ -24,6 +24,14 @@ pub mod quad;
 pub mod text;
 pub mod tree;
 
+/// Holds all of the current frame's input state
+#[derive(Debug, Clone)]
+pub struct Input {
+    pub mouse_released: bool,
+    pub mouse_pos: Option<(u32, u32)>,
+    pub prev_mouse_pos: Option<(u32, u32)>,
+}
+
 pub fn run<State, Message, Update, View>(
     initial_state: State,
     update: Update,
@@ -40,6 +48,8 @@ where
     env_logger::init();
 
     let mut state = initial_state;
+
+    let mut old_input: Option<Input> = None;
 
     let event_loop = EventLoop::new().unwrap();
     let mut winit_input = WinitInputHelper::new();
@@ -122,9 +132,16 @@ where
             } else {
                 None
             };
-            let input = crate::button::Input {
+
+            let prev_mouse_pos = match &old_input {
+                Some(o) => o.mouse_pos,
+                None => None,
+            };
+
+            let input = Input {
                 mouse_released: winit_input.mouse_released(0),
                 mouse_pos: input_mouse_pos,
+                prev_mouse_pos,
             };
 
             // get a message, if any
@@ -139,6 +156,7 @@ where
             // Update internal state and request a redraw
             //            world.update();
             window.request_redraw();
+            old_input = Some(input.clone());
         }
     });
     res.map_err(|e| Error::UserDefined(Box::new(e)))

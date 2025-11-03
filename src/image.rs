@@ -75,11 +75,7 @@ impl<Message> Element<Message> for Image {
         (self.height * self.scale_factor) as u32
     }
 
-    fn get_message(
-        &mut self,
-        _input: &crate::button::Input,
-        _region: CalculatedLayout,
-    ) -> Option<Message> {
+    fn get_message(&mut self, _input: &crate::Input, _region: CalculatedLayout) -> Option<Message> {
         None
     }
 }

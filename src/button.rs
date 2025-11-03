@@ -1,11 +1,4 @@
-use crate::{element::Element, layout::CalculatedLayout};
-
-/// Holds all of the current frame's input state
-#[derive(Debug)]
-pub struct Input {
-    pub mouse_released: bool,
-    pub mouse_pos: Option<(u32, u32)>,
-}
+use crate::{element::Element, layout::CalculatedLayout, Input};
 
 // TODO make generic so that user can define Message
 pub struct Button<Message> {

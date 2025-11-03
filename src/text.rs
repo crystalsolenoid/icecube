@@ -118,11 +118,7 @@ impl<Message> Element<Message> for Text {
         self.get_max_word_px()
     }
 
-    fn get_message(
-        &mut self,
-        _input: &crate::button::Input,
-        _region: CalculatedLayout,
-    ) -> Option<Message> {
+    fn get_message(&mut self, _input: &crate::Input, _region: CalculatedLayout) -> Option<Message> {
         None
     }
 }

@@ -174,7 +174,7 @@ impl<Message> Node<Message, CalculatedLayout> {
             .for_each(|node| node.draw_recursive(frame, (0, 0)));
     }
 
-    pub fn get_message(&mut self, input: &crate::button::Input) -> Option<Message> {
+    pub fn get_message(&mut self, input: &crate::Input) -> Option<Message> {
         let message = self.element.get_message(input, self.layout);
         if message.is_some() {
             message

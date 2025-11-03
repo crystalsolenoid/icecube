@@ -1,8 +1,8 @@
 use crate::{
-    button::Input,
     element::Element,
     layout::{CalculatedLayout, Layout},
     tree::Node,
+    Input,
 };
 
 // TODO make generic so that user can define Message
@@ -11,8 +11,6 @@ pub struct MouseArea<Message> {
     on_press: Option<Box<dyn Fn((usize, usize)) -> Message>>,
     on_hover: Option<Box<dyn Fn((usize, usize)) -> Message>>,
     on_exit: Option<Box<dyn Fn() -> Message>>,
-
-    previously_in_bounds: bool,
 }
 
 impl<Message> MouseArea<Message> {
@@ -21,7 +19,6 @@ impl<Message> MouseArea<Message> {
             on_press: None,
             on_hover: None,
             on_exit: None,
-            previously_in_bounds: false,
         }
     }
 
@@ -57,10 +54,8 @@ impl<Message> Element<Message> for MouseArea<Message> {
     fn draw(&self, _frame: &mut [u8], _region: CalculatedLayout) {}
 
     fn get_message(&mut self, input: &Input, region: CalculatedLayout) -> Option<Message> {
-        dbg!(&self.previously_in_bounds);
         if let Some(mouse_pos) = input.mouse_pos {
             if region.contains(mouse_pos) {
-                self.previously_in_bounds = true;
                 if input.mouse_released {
                     if let Some(on_press) = &self.on_press {
                         return Some((on_press)((
@@ -76,8 +71,11 @@ impl<Message> Element<Message> for MouseArea<Message> {
                     )));
                 }
             } else {
-                if self.previously_in_bounds {
-                    self.previously_in_bounds = false;
+                let previously_in_bounds = match input.prev_mouse_pos {
+                    Some(pos) => region.contains(pos),
+                    None => false,
+                };
+                if previously_in_bounds {
                     if let Some(on_exit) = &self.on_exit {
                         return Some((on_exit)());
                     }
