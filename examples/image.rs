@@ -4,6 +4,7 @@ use icecube::layout::{Layout, Length};
 use icecube::palette::MAIN_LIGHT;
 use icecube::quad::Quad;
 use icecube::tree::Node;
+use icecube::{col, row};
 
 #[derive(Debug, Copy, Clone)]
 pub enum Message {
@@ -43,38 +44,21 @@ fn update(m: Message, state: &mut State) {
 }
 
 fn view(state: &State) -> Node<Message, Layout> {
-    //TODO: width height here, but height width in padding
-    let mut root = Node::root_node(320, 240, MAIN_LIGHT).row();
-
-    // This fills the screen, causing the screen to clear each frame
-    let mut container = Node::new(Quad::new().fill(MAIN_LIGHT))
-        .width(Length::Grow)
-        .height(Length::Grow)
-        .column();
-    let mut row = Node::new(Quad::new())
-        .row()
-        .width(Length::Grow)
-        .height(Length::Shrink);
-
     let image = Node::new(Image::new(state.data.clone(), 3, 4).scale_factor(8))
         .height(Length::Shrink)
         .width(Length::Shrink);
-
-    container.push(Node::spacer());
 
     let mut button = Node::new(Button::new().on_press(Message::Invert))
         .height(Length::Shrink)
         .width(Length::Shrink);
     button.push(image);
 
-    row.push(Node::spacer());
-    row.push(button);
-    row.push(Node::spacer());
-    container.push(row);
-
-    container.push(Node::spacer());
-    root.push(container);
-    root
+    row![
+        Node::spacer(),
+        col![Node::spacer(), button, Node::spacer()],
+        Node::spacer()
+    ]
+    .height(Length::Grow)
 }
 
 fn main() -> Result<(), pixels::Error> {

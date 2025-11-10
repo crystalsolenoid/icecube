@@ -2,15 +2,12 @@
 #![forbid(unsafe_code)]
 
 use icecube::button::Button;
-use icecube::font;
 use icecube::layout::{Layout, Length};
 use icecube::palette::{BLUE_DARK, MAIN_DARK, MAIN_LIGHT, RED_DARK, RED_LIGHT};
 use icecube::quad::Quad;
 use icecube::text::Text;
 use icecube::tree::Node;
-
-const WIDTH: u32 = 320;
-const HEIGHT: u32 = 240;
+use icecube::{col, font, row};
 
 // TODO can we specify a generic default for Node for a nicer API?
 fn build_ui_tree(state: &State) -> Node<Message, Layout> {
@@ -23,56 +20,6 @@ fn build_ui_tree(state: &State) -> Node<Message, Layout> {
      *   |   | a (red_light; red_dark)
      *   |   | b (blue_light; blue_dark)
      */
-
-    let mut root = Node::root_node(WIDTH as usize, HEIGHT as usize, MAIN_DARK).row(); // TODO figure out how we want to
-                                                                                      // handle coordinate types everywhere
-                                                                                      // usize vs u32
-
-    let mut panel = Node::new(
-        Quad::new()
-            .fill(MAIN_DARK)
-            .border_thickness(2)
-            .border_color(BLUE_DARK),
-    )
-    .height(Length::Grow)
-    .width(Length::Fixed(50))
-    .column()
-    .padding(4)
-    .spacing(2);
-
-    let mut viewport = Node::new(
-        Quad::new()
-            .fill(MAIN_LIGHT)
-            .border_thickness(2)
-            .border_color(RED_DARK),
-    )
-    .width(Length::Grow)
-    .height(Length::Grow)
-    .spacing(10)
-    .padding([4, 10])
-    .column();
-
-    let a = Node::new(
-        Quad::new()
-            .fill(RED_LIGHT)
-            .border_thickness(2)
-            .border_color(RED_DARK),
-    )
-    .width(Length::Grow)
-    .height(Length::Fixed(30))
-    .row();
-
-    let mut b = Node::new(
-        Quad::new()
-            .fill(MAIN_LIGHT)
-            .border_thickness(2)
-            .border_color(BLUE_DARK),
-    )
-    .width(Length::Grow)
-    .height(Length::Fixed(60))
-    .padding(4)
-    .spacing(10)
-    .row();
 
     let b_child = || {
         Node::new(
@@ -105,33 +52,27 @@ fn build_ui_tree(state: &State) -> Node<Message, Layout> {
         container
     };
 
-    b.push(b_child());
-    b.push(
+    let b = row![
+        b_child(),
         menu_item(
             "A long piece of text that no longer overflows its box...",
             &font::BLACKLETTER,
         )
         .width(Length::Grow),
-    );
-    b.push(b_child());
-    b.push(b_child());
-
-    let c = Node::new(
+        b_child(),
+        b_child(),
+    ]
+    .with_element(
         Quad::new()
-            .fill(RED_DARK)
+            .fill(MAIN_LIGHT)
             .border_thickness(2)
-            .border_color(RED_LIGHT),
+            .border_color(BLUE_DARK),
     )
     .width(Length::Grow)
-    .height(Length::Fixed(30))
+    .height(Length::Fixed(60))
+    .padding(4)
+    .spacing(10)
     .row();
-
-    let spacer = || {
-        Node::new(Quad::new().border_thickness(0))
-            .width(Length::Grow)
-            .height(Length::Grow)
-            .row()
-    };
 
     let button_text = Node::new(Text::new("color".into()).with_font(&font::OLDSCHOOL));
     let mut button_quad = Node::new(
@@ -150,23 +91,61 @@ fn build_ui_tree(state: &State) -> Node<Message, Layout> {
         .height(Length::Shrink);
     change_text_color.push(button_quad);
 
-    panel.push(change_text_color);
-    //    panel.push(menu_item("a", builtin_fonts::TEST_FONT)); // TODO
-    //    panel.push(menu_item("a", FontType::Image(wiftnywfutn)));
-    panel.push(menu_item("b", &font::OLDSCHOOL));
-    panel.push(menu_item("c - a long label", &font::OLDSCHOOL));
-    panel.push(menu_item("d", &font::OLDSCHOOL));
-    panel.push(spacer());
-    panel.push(menu_item("這", &font::OLDSCHOOL));
+    let panel = col![
+        change_text_color,
+        menu_item("b", &font::OLDSCHOOL),
+        menu_item("c - a long label", &font::OLDSCHOOL),
+        menu_item("d", &font::OLDSCHOOL),
+        Node::spacer(),
+        menu_item("這", &font::OLDSCHOOL),
+    ]
+    .with_element(
+        Quad::new()
+            .fill(MAIN_DARK)
+            .border_thickness(2)
+            .border_color(BLUE_DARK),
+    )
+    .height(Length::Grow)
+    .width(Length::Fixed(50))
+    .column()
+    .padding(4)
+    .spacing(2);
+    let viewport = col![
+        // A
+        Node::new(
+            Quad::new()
+                .fill(RED_LIGHT)
+                .border_thickness(2)
+                .border_color(RED_DARK),
+        )
+        .width(Length::Grow)
+        .height(Length::Fixed(30))
+        .row(),
+        b,
+        Node::spacer(),
+        // C
+        Node::new(
+            Quad::new()
+                .fill(RED_DARK)
+                .border_thickness(2)
+                .border_color(RED_LIGHT),
+        )
+        .width(Length::Grow)
+        .height(Length::Fixed(30))
+        .row()
+    ]
+    .with_element(
+        Quad::new()
+            .fill(MAIN_LIGHT)
+            .border_thickness(2)
+            .border_color(RED_DARK),
+    )
+    .width(Length::Grow)
+    .height(Length::Grow)
+    .spacing(10)
+    .padding([4, 10]);
 
-    viewport.push(a);
-    viewport.push(b);
-    viewport.push(spacer());
-    viewport.push(c);
-
-    root.push(panel);
-    root.push(viewport);
-    root
+    row![panel, viewport].height(Length::Grow)
 }
 
 // TODO user-defined

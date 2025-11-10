@@ -4,7 +4,7 @@ use crate::{
     tree::Node,
 };
 
-pub fn row<Message>(elements: Vec<Node<Message, Layout>>) -> Node<Message, Layout> {
+pub fn create_row<Message>(elements: Vec<Node<Message, Layout>>) -> Node<Message, Layout> {
     let mut row = Node::new(Quad::new())
         .row()
         .width(Length::Grow)
@@ -16,7 +16,7 @@ pub fn row<Message>(elements: Vec<Node<Message, Layout>>) -> Node<Message, Layou
     row
 }
 
-pub fn column<Message>(elements: Vec<Node<Message, Layout>>) -> Node<Message, Layout> {
+pub fn create_column<Message>(elements: Vec<Node<Message, Layout>>) -> Node<Message, Layout> {
     let mut col = Node::new(Quad::new())
         .column()
         .height(Length::Grow)
@@ -26,4 +26,23 @@ pub fn column<Message>(elements: Vec<Node<Message, Layout>>) -> Node<Message, La
         col.push(element);
     }
     col
+}
+
+#[macro_export]
+macro_rules! row {
+    () => (
+        $crate::widget::create_row(std::vec::Vec::new())
+    );
+    ($($x:expr),+ $(,)?) => (
+        $crate::widget::create_row(vec![$($x),+])
+    );
+}
+#[macro_export]
+macro_rules! col {
+    () => (
+        $crate::widget::create_column(std::vec::Vec::new())
+    );
+    ($($x:expr),+ $(,)?) => (
+        $crate::widget::create_column(vec![$($x),+])
+    );
 }

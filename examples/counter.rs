@@ -5,7 +5,7 @@ use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_LIGHT};
 use icecube::quad::Quad;
 use icecube::text::Text;
 use icecube::tree::Node;
-use icecube::widget::{column, row};
+use icecube::{col, row};
 
 #[derive(Debug, Copy, Clone)]
 pub enum Message {
@@ -26,38 +26,30 @@ fn update(m: Message, state: &mut State) {
 }
 
 fn view(state: &State) -> Node<Message, Layout> {
-    let mut root = Node::root_node(320, 240, MAIN_LIGHT).row();
-
     let font = &font::BLACKLETTER;
 
     let mut count =
         Node::new(Text::new(format!("{}", state.count)).with_font(font)).width(Length::Shrink);
     count.name = Some("counter value".to_string());
 
-    let count_row = row(vec![Node::spacer(), count, Node::spacer()]);
+    let count_row = row![Node::spacer(), count, Node::spacer()];
 
-    let increment = make_button("+".into(), Message::Increment);
-    let decrement = make_button("-".into(), Message::Decrement);
-
-    let button_row = row(vec![
+    let button_row = row![
         Node::spacer(),
-        increment,
+        make_button("+".into(), Message::Increment),
         Node::spacer().width(2),
-        decrement,
+        make_button("-".into(), Message::Decrement),
         Node::spacer(),
-    ])
+    ]
     .width(Length::Shrink)
     .padding(5);
 
-    root.push(Node::spacer());
-    root.push(column(vec![
+    row![
         Node::spacer(),
-        count_row,
-        button_row,
+        col![Node::spacer(), count_row, button_row, Node::spacer()],
         Node::spacer(),
-    ]));
-    root.push(Node::spacer());
-    root
+    ]
+    .height(Length::Grow)
 }
 
 //TODO: Make an alias for LazyLock<FontType> and for Node

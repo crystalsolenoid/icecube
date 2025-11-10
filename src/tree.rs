@@ -24,9 +24,9 @@ impl<Message, LayoutStage: Debug> Debug for Node<Message, LayoutStage> {
 }
 
 impl<Message> Node<Message, Layout> {
-    pub fn root_node(width: usize, height: usize, color: [u8; 4]) -> Self {
+    pub fn root_node(width: usize, height: usize) -> Self {
         let window = Quad::new().style(QuadStyle {
-            fill_style: Some(color), // TODO should this be setting the background?
+            fill_style: None, // TODO should this be setting the background?
             border_style: None,
         });
 
@@ -131,6 +131,13 @@ impl<Message> Node<Message, Layout> {
 
     pub fn push(&mut self, child: impl Into<Self>) {
         self.children.push(child.into());
+    }
+
+    pub fn with_element(self, element: impl Element<Message> + 'static) -> Self {
+        Self {
+            element: Box::new(element),
+            ..self
+        }
     }
 
     /*

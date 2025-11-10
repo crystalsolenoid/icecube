@@ -26,7 +26,7 @@ impl<Message> Node<Message, Layout> {
         // node length types
         let root_size = match (self.layout.width, self.layout.height) {
             (Length::Fixed(w), Length::Fixed(h)) => XY(w, h),
-            (_, _) => panic!(),
+            (_, _) => panic!("root size must be a fixed length"),
         };
         self.shrink_width_pass()
             .grow_width_pass(root_size.0) /*.wrap()*/

@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use icecube::button::Button;
-use icecube::font;
 use icecube::image::Image;
 use icecube::layout::{Layout, Length};
 use icecube::mouse_area::MouseArea;
@@ -9,6 +8,7 @@ use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_LIGHT};
 use icecube::quad::Quad;
 use icecube::text::Text;
 use icecube::tree::Node;
+use icecube::{col, font, row};
 
 use rand::prelude::*;
 
@@ -224,20 +224,6 @@ fn update(m: Message, state: &mut State) {
 }
 
 fn view(state: &State) -> Node<Message, Layout> {
-    //TODO: width height here, but height width in padding
-    let mut root = Node::root_node(320, 240, MAIN_LIGHT).row();
-
-    // This fills the screen, causing the screen to clear each frame
-    let mut container = Node::new(Quad::new().fill(MAIN_LIGHT))
-        .column()
-        .spacing(10)
-        .width(Length::Grow)
-        .height(Length::Grow);
-
-    let mut row1 = Node::spacer().row().height(Length::Shrink);
-    let mut row2 = Node::spacer().row().height(Length::Shrink).spacing(10);
-    let mut row3 = Node::spacer().row().height(Length::Shrink);
-
     let step_button_text = Node::new(Text::new("Step".into()).with_font(&font::BLACKLETTER));
     let mut step_button = Node::new(Button::new().on_press(Message::Step))
         .height(Length::Shrink)
@@ -343,8 +329,6 @@ fn view(state: &State) -> Node<Message, Layout> {
     .height(Length::Shrink)
     .width(Length::Shrink);
 
-    container.push(Node::new(Quad::new()));
-
     let mut wrapper = Node::new(
         Quad::new()
             .border_thickness(3)
@@ -365,27 +349,23 @@ fn view(state: &State) -> Node<Message, Layout> {
 
     wrapper.push(mouse_image_wrapper);
 
-    row1.push(Node::spacer());
-    row1.push(wrapper);
-    row1.push(Node::spacer());
-    container.push(row1);
-
-    row2.push(Node::spacer());
-    row2.push(step_button);
-    row2.push(glider_button);
-    row2.push(randomize_button);
-    row2.push(clear_button);
-    row2.push(Node::spacer());
-    container.push(row2);
-
-    row3.push(Node::spacer());
-    row3.push(pause_button);
-    row3.push(Node::spacer());
-    container.push(row3);
-
-    container.push(Node::spacer());
-    root.push(container);
-    root
+    col![
+        Node::spacer(),
+        row![Node::spacer(), wrapper, Node::spacer()],
+        row![
+            Node::spacer(),
+            step_button,
+            glider_button,
+            randomize_button,
+            clear_button,
+            Node::spacer(),
+        ]
+        .spacing(10),
+        row![Node::spacer(), pause_button, Node::spacer()],
+        Node::spacer(),
+    ]
+    .spacing(10)
+    .width(Length::Grow)
 }
 
 fn main() -> Result<(), pixels::Error> {

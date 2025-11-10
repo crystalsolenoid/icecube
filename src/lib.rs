@@ -82,7 +82,9 @@ where
     let srgb = to_linear_rgb(clear_color);
     pixels.clear_color(srgb);
 
-    let mut root = view(&state).calculate_layout();
+    let mut new_root = Node::root_node(width as usize, height as usize);
+    new_root.push(view(&state));
+    let mut root = new_root.calculate_layout();
 
     let mut mouse_position: Result<(usize, usize), (isize, isize)> = Err((0, 0));
 
@@ -94,7 +96,10 @@ where
             ..
         } = event
         {
-            //world.draw(pixels.frame_mut());
+            // Clear
+            for pixel in pixels.frame_mut().chunks_exact_mut(4) {
+                pixel.copy_from_slice(&clear_color);
+            }
             root.draw_recursive(pixels.frame_mut(), (0, 0));
 
             if let Err(err) = pixels.render() {
@@ -167,7 +172,10 @@ where
             // TODO handle multiple messages in a frame?
             if let Some(message) = message {
                 update(message, &mut state);
-                root = view(&state).calculate_layout();
+
+                let mut new_root = Node::root_node(width as usize, height as usize);
+                new_root.push(view(&state));
+                root = new_root.calculate_layout();
             }
 
             // Update internal state and request a redraw
