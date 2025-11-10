@@ -5,6 +5,7 @@ use icecube::palette::{BLUE_DARK, BLUE_LIGHT, MAIN_LIGHT};
 use icecube::quad::Quad;
 use icecube::text::Text;
 use icecube::tree::Node;
+use icecube::widget::{column, row};
 
 #[derive(Debug, Copy, Clone)]
 pub enum Message {
@@ -25,44 +26,36 @@ fn update(m: Message, state: &mut State) {
 }
 
 fn view(state: &State) -> Node<Message, Layout> {
-    let mut root = Node::root_node(320, 240).row();
-
-    // This fills the screen, causing the screen to clear each frame
-    let mut container = Node::new(Quad::new().fill(MAIN_LIGHT))
-        .column()
-        .height(Length::Grow);
+    let mut root = Node::root_node(320, 240, MAIN_LIGHT).row();
 
     let font = &font::BLACKLETTER;
 
-    let mut count_row = Node::new(Quad::new())
-        .row()
-        .width(Length::Grow)
-        .height(Length::Shrink);
     let mut count =
         Node::new(Text::new(format!("{}", state.count)).with_font(font)).width(Length::Shrink);
     count.name = Some("counter value".to_string());
 
-    count_row.push(Node::spacer());
-    count_row.push(count);
-    count_row.push(Node::spacer());
+    let count_row = row(vec![Node::spacer(), count, Node::spacer()]);
 
     let increment = make_button("+".into(), Message::Increment);
     let decrement = make_button("-".into(), Message::Decrement);
 
-    let mut button_row = Node::new(Quad::new()).row().padding(5);
-    button_row.push(Node::spacer());
-    button_row.push(increment);
-    button_row.push(Node::new(Quad::new()).width(Length::Fixed(2)));
-    button_row.push(decrement);
-    button_row.push(Node::spacer());
-
-    container.push(Node::spacer());
-    container.push(count_row);
-    container.push(button_row);
-    container.push(Node::spacer());
+    let button_row = row(vec![
+        Node::spacer(),
+        increment,
+        Node::spacer().width(2),
+        decrement,
+        Node::spacer(),
+    ])
+    .width(Length::Shrink)
+    .padding(5);
 
     root.push(Node::spacer());
-    root.push(container);
+    root.push(column(vec![
+        Node::spacer(),
+        count_row,
+        button_row,
+        Node::spacer(),
+    ]));
     root.push(Node::spacer());
     root
 }

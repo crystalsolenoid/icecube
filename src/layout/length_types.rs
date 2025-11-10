@@ -21,6 +21,12 @@ pub enum Length {
     Fixed(u32),
 }
 
+impl From<u32> for Length {
+    fn from(value: u32) -> Self {
+        Length::Fixed(value)
+    }
+}
+
 /*
 <Length, Length>
 self.shrink_width_pass()

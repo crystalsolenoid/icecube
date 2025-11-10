@@ -44,7 +44,7 @@ fn update(m: Message, state: &mut State) {
 
 fn view(state: &State) -> Node<Message, Layout> {
     //TODO: width height here, but height width in padding
-    let mut root = Node::root_node(320, 240).row();
+    let mut root = Node::root_node(320, 240, MAIN_LIGHT).row();
 
     // This fills the screen, causing the screen to clear each frame
     let mut container = Node::new(Quad::new().fill(MAIN_LIGHT))

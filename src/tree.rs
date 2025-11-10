@@ -24,9 +24,9 @@ impl<Message, LayoutStage: Debug> Debug for Node<Message, LayoutStage> {
 }
 
 impl<Message> Node<Message, Layout> {
-    pub fn root_node(width: usize, height: usize) -> Self {
+    pub fn root_node(width: usize, height: usize, color: [u8; 4]) -> Self {
         let window = Quad::new().style(QuadStyle {
-            fill_style: None, // TODO should this be setting the background?
+            fill_style: Some(color), // TODO should this be setting the background?
             border_style: None,
         });
 
@@ -68,21 +68,21 @@ impl<Message> Node<Message, Layout> {
         }
     }
 
-    pub fn width(self, width: Length) -> Self {
+    pub fn width(self, width: impl Into<Length>) -> Self {
         // TODO make Length implement from u32
         Self {
             layout: Layout {
-                width,
+                width: width.into(),
                 ..self.layout
             },
             ..self
         }
     }
 
-    pub fn height(self, height: Length) -> Self {
+    pub fn height(self, height: impl Into<Length>) -> Self {
         Self {
             layout: Layout {
-                height,
+                height: height.into(),
                 ..self.layout
             },
             ..self

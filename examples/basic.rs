@@ -24,9 +24,9 @@ fn build_ui_tree(state: &State) -> Node<Message, Layout> {
      *   |   | b (blue_light; blue_dark)
      */
 
-    let mut root = Node::root_node(WIDTH as usize, HEIGHT as usize).row(); // TODO figure out how we want to
-                                                                           // handle coordinate types everywhere
-                                                                           // usize vs u32
+    let mut root = Node::root_node(WIDTH as usize, HEIGHT as usize, MAIN_DARK).row(); // TODO figure out how we want to
+                                                                                      // handle coordinate types everywhere
+                                                                                      // usize vs u32
 
     let mut panel = Node::new(
         Quad::new()

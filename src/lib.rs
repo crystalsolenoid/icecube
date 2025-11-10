@@ -25,6 +25,7 @@ pub mod palette;
 pub mod quad;
 pub mod text;
 pub mod tree;
+pub mod widget;
 
 /// Holds all of the current frame's input state
 #[derive(Debug, Clone)]
