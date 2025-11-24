@@ -8,8 +8,8 @@ use crate::palette::color_from_index;
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
 
 #[derive(Clone)]
-pub struct Image {
-    pub data: Vec<usize>,
+pub struct Image<T> {
+    pub data: Vec<T>,
     pub scale_factor: usize,
     /// image width before scaling
     pub width: usize,
@@ -17,8 +17,8 @@ pub struct Image {
     pub height: usize,
 }
 
-impl Image {
-    pub fn new(data: Vec<usize>, width: usize, height: usize) -> Self {
+impl<T> Image<T> {
+    pub fn new(data: Vec<T>, width: usize, height: usize) -> Self {
         Self {
             data,
             width,
@@ -33,7 +33,23 @@ impl Image {
     }
 }
 
-impl<Message> Element<Message> for Image {
+trait PixelColor {
+    fn get_pixel_color(&self) -> &[u8; 4];
+}
+
+impl PixelColor for [u8; 4] {
+    fn get_pixel_color(&self) -> &[u8; 4] {
+        self
+    }
+}
+
+impl PixelColor for usize {
+    fn get_pixel_color(&self) -> &[u8; 4] {
+        color_from_index(*self)
+    }
+}
+
+impl<Message, T: PixelColor + Clone> Element<Message> for Image<T> {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
         for j in 0..self.height {
             for i in 0..self.width {
@@ -41,15 +57,14 @@ impl<Message> Element<Message> for Image {
                     + (region.y as usize + j * self.scale_factor) * WIDTH as usize)
                     * 4;
 
-                let pixel_index = self.data[i + j * self.width];
-                let pixel = color_from_index(pixel_index);
+                let pixel = self.data[i + j * self.width].get_pixel_color();
                 if frame_index + 4 < frame.len() {
                     // our current workaround for out of
                     // bounds crashing
                     match self.scale_factor {
                         1 => {
                             //TODO: look up actual pixel value
-                            frame[frame_index..(frame_index + 4)].copy_from_slice(&pixel);
+                            frame[frame_index..(frame_index + 4)].copy_from_slice(pixel);
                         }
                         _ => {
                             for sj in 0..self.scale_factor {
@@ -57,7 +72,7 @@ impl<Message> Element<Message> for Image {
                                     let scaled_frame_index =
                                         frame_index + (si + sj * WIDTH as usize) * 4;
                                     frame[scaled_frame_index..(scaled_frame_index + 4)]
-                                        .copy_from_slice(&pixel);
+                                        .copy_from_slice(pixel);
                                 }
                             }
                         }
