@@ -158,21 +158,24 @@ where
                 mouse_down: winit_input.mouse_held(0),
             };
 
-            // get a message, if any
-            let message = match root.get_message(&input) {
-                Some(msg) => Some(msg),
-                None => {
-                    let now = Instant::now();
-                    let d = now - time_of_last_timer;
-                    time_of_last_timer = now;
-                    timer(d)
-                }
-            };
+            // Handle Messages
+            let now = Instant::now();
+            let d = now - time_of_last_timer;
+            time_of_last_timer = now;
 
-            // TODO handle multiple messages in a frame?
-            if let Some(message) = message {
-                update(message, &mut state);
+            let messages: Vec<_> = [root.get_message(&input), timer(d)]
+                .into_iter()
+                // Filters None values
+                .flatten()
+                .collect();
 
+            let update_needed = !messages.is_empty();
+
+            messages
+                .into_iter()
+                .for_each(|message| update(message, &mut state));
+
+            if update_needed {
                 let mut new_root = Node::root_node(width as usize, height as usize);
                 new_root.push(view(&state));
                 root = new_root.calculate_layout();
