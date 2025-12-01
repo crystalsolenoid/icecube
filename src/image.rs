@@ -34,17 +34,17 @@ impl<T> Image<T> {
 }
 
 trait PixelColor {
-    fn get_pixel_color(&self) -> &[u8; 4];
+    fn get_pixel_color(&self) -> [u8; 4];
 }
 
 impl PixelColor for [u8; 4] {
-    fn get_pixel_color(&self) -> &[u8; 4] {
-        self
+    fn get_pixel_color(&self) -> [u8; 4] {
+        *self
     }
 }
 
 impl PixelColor for usize {
-    fn get_pixel_color(&self) -> &[u8; 4] {
+    fn get_pixel_color(&self) -> [u8; 4] {
         color_from_index(*self)
     }
 }
@@ -64,7 +64,7 @@ impl<Message, T: PixelColor + Clone> Element<Message> for Image<T> {
                     match self.scale_factor {
                         1 => {
                             //TODO: look up actual pixel value
-                            frame[frame_index..(frame_index + 4)].copy_from_slice(pixel);
+                            frame[frame_index..(frame_index + 4)].copy_from_slice(&pixel);
                         }
                         _ => {
                             for sj in 0..self.scale_factor {
@@ -72,7 +72,7 @@ impl<Message, T: PixelColor + Clone> Element<Message> for Image<T> {
                                     let scaled_frame_index =
                                         frame_index + (si + sj * WIDTH as usize) * 4;
                                     frame[scaled_frame_index..(scaled_frame_index + 4)]
-                                        .copy_from_slice(pixel);
+                                        .copy_from_slice(&pixel);
                                 }
                             }
                         }

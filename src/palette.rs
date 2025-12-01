@@ -9,14 +9,14 @@ pub const BLUE_LIGHT: Color = [0x00, 0xb0, 0xbe, 0xff];
 pub const RED_LIGHT: Color = [0xff, 0xb0, 0xa3, 0xff];
 pub const RED_DARK: Color = [0xff, 0x69, 0x73, 0xff];
 
-pub fn color_from_index(index: usize) -> &'static Color {
+pub fn color_from_index(index: usize) -> Color {
     match index {
-        0 => &MAIN_DARK,
-        1 => &MAIN_LIGHT,
-        2 => &BLUE_DARK,
-        3 => &BLUE_LIGHT,
-        4 => &RED_DARK,
-        5 => &RED_LIGHT,
+        0 => MAIN_DARK,
+        1 => MAIN_LIGHT,
+        2 => BLUE_DARK,
+        3 => BLUE_LIGHT,
+        4 => RED_DARK,
+        5 => RED_LIGHT,
         _ => panic!("index {index} does not correspond to a color in the palette"),
     }
 }
