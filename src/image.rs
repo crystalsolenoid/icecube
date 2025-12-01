@@ -1,11 +1,10 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
+use crate::constants::WIDTH;
 use crate::element::Element;
 use crate::layout::CalculatedLayout;
 use crate::palette::color_from_index;
-
-const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
 
 #[derive(Clone)]
 pub struct Image<T> {

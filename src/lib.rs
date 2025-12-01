@@ -16,6 +16,7 @@ use crate::{layout::Layout, palette::Color, tree::Node};
 
 pub mod buffer;
 pub mod button;
+pub mod constants;
 pub mod element;
 pub mod font;
 pub mod image;
@@ -23,6 +24,7 @@ pub mod layout;
 pub mod mouse_area;
 pub mod palette;
 pub mod quad;
+pub mod slider;
 pub mod text;
 pub mod tree;
 pub mod widget;

@@ -1,0 +1,78 @@
+use crate::{
+    constants::WIDTH,
+    element::Element,
+    layout::{CalculatedLayout, Layout},
+    palette::{BLUE_DARK, BLUE_LIGHT},
+    tree::Node,
+    Input,
+};
+
+// TODO make generic so that user can define Message
+pub struct Slider<Message> {
+    /// Pressed on the most recent frame
+    on_drag: Option<Box<dyn Fn(f32) -> Message>>,
+    value: f32,
+    range: std::ops::Range<f32>, // 0.0..1.0
+                                 // granularity...
+                                 // on_finish_drag...
+}
+
+impl<Message> Slider<Message> {
+    pub fn new(range: std::ops::Range<f32>, value: f32) -> Self {
+        Self {
+            on_drag: None,
+            value,
+            range,
+        }
+    }
+
+    // TODO allow unsetting a message?
+    pub fn on_drag<F>(mut self, m: F) -> Self
+    where
+        F: Fn(f32) -> Message + 'static,
+    {
+        self.on_drag = Some(Box::new(m));
+        self
+    }
+}
+
+impl<Message> Element<Message> for Slider<Message> {
+    fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
+        let percent = self.value / (self.range.end - self.range.start);
+        for j in 0..region.h {
+            for i in 0..region.w {
+                let frame_index = (((region.x + i) + (region.y + j) * WIDTH) * 4) as usize;
+
+                let pixel = if (i as f32 / region.w as f32) < percent {
+                    BLUE_LIGHT
+                } else {
+                    BLUE_DARK
+                };
+                frame[frame_index..(frame_index + 4)].copy_from_slice(&pixel);
+            }
+        }
+    }
+
+    fn get_message(&mut self, input: &Input, region: CalculatedLayout) -> Option<Message> {
+        if let Some(mouse_pos) = input.mouse_pos {
+            if region.contains(mouse_pos) {
+                if input.mouse_down {
+                    if let Some(on_drag) = &self.on_drag {
+                        let percent = (mouse_pos.0 - region.x) as f32 / region.w as f32;
+                        let new_value =
+                            (self.range.end - self.range.start) * percent + self.range.start;
+                        self.value = new_value;
+                        return Some((on_drag)(new_value));
+                    }
+                }
+            }
+        }
+        return None;
+    }
+}
+
+impl<Message: 'static> Into<Node<Message, Layout>> for Slider<Message> {
+    fn into(self) -> Node<Message, Layout> {
+        Node::new(self)
+    }
+}
