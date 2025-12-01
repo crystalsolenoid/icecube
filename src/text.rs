@@ -4,6 +4,7 @@ use crate::buffer::Buffer;
 use crate::element::Element;
 use crate::font::{self, Font, FontType};
 use crate::layout::CalculatedLayout;
+use crate::palette::{Color, BLUE_LIGHT};
 
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
                         //
@@ -13,6 +14,7 @@ pub struct Text {
     pub font: &'static LazyLock<FontType>,
     x_spacing: u32,
     y_spacing: u32,
+    color: Color,
     //pub font: &'static FontType,
 }
 
@@ -23,6 +25,7 @@ impl Text {
             font: &font::OLDSCHOOL,
             x_spacing: 1,
             y_spacing: 1,
+            color: BLUE_LIGHT,
         }
     }
 
@@ -32,6 +35,9 @@ impl Text {
 
     pub fn with_font(self, font: &'static LazyLock<FontType>) -> Self {
         Self { font, ..self }
+    }
+    pub fn with_color(self, color: Color) -> Self {
+        Self { color, ..self }
     }
     fn hard_wrap(&self, width: u32) -> Option<u32> {
         let length = self.content.len() as u32 * (self.font.width() as u32 + self.x_spacing);
@@ -86,6 +92,7 @@ impl<Message> Element<Message> for Text {
                             char_x as usize,
                             char_y as usize,
                             character,
+                            self.color,
                         );
 
                         *x_pos += char_width + self.x_spacing as usize;

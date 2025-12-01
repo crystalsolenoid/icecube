@@ -3,7 +3,7 @@ use std::{char, sync::LazyLock};
 use bdf2;
 use image::{ImageBuffer, Luma};
 
-use crate::{buffer::Buffer, palette::BLUE_LIGHT};
+use crate::{buffer::Buffer, palette::Color};
 
 pub static OLDSCHOOL: LazyLock<FontType> =
     std::sync::LazyLock::new(|| FontType::Image(ImageFont::oldschool()));
@@ -58,6 +58,7 @@ impl Font for BdfFont {
         screen_x: usize,
         screen_y: usize,
         character: char,
+        color: Color,
     ) -> usize {
         let glyph = self.font.glyphs().get(&character).unwrap();
         let y_offset = glyph.bounds().y;
@@ -75,7 +76,7 @@ impl Font for BdfFont {
             // our current workaround for out of
             // bounds crashing
             {
-                buffer.data[frame_index..(frame_index + 4)].copy_from_slice(&BLUE_LIGHT);
+                buffer.data[frame_index..(frame_index + 4)].copy_from_slice(&color);
             }
         });
 
@@ -113,10 +114,11 @@ impl Font for FontType {
         screen_x: usize,
         screen_y: usize,
         character: char,
+        color: Color,
     ) -> usize {
         match self {
-            Self::Image(f) => f.draw_character(buffer, screen_x, screen_y, character),
-            Self::Bdf(f) => f.draw_character(buffer, screen_x, screen_y, character),
+            Self::Image(f) => f.draw_character(buffer, screen_x, screen_y, character, color),
+            Self::Bdf(f) => f.draw_character(buffer, screen_x, screen_y, character, color),
         }
     }
     fn glyph_width(&self, character: char) -> usize {
@@ -220,6 +222,7 @@ impl Font for ImageFont {
         screen_x: usize,
         screen_y: usize,
         character: char,
+        color: Color,
     ) -> usize {
         let index = match character {
             ' ' => return self.character_width,
@@ -249,7 +252,7 @@ impl Font for ImageFont {
                 // our current workaround for out of
                 // bounds crashing
                 {
-                    buffer.data[frame_index..(frame_index + 4)].copy_from_slice(&BLUE_LIGHT);
+                    buffer.data[frame_index..(frame_index + 4)].copy_from_slice(&color);
                 }
             }
         }
@@ -264,6 +267,7 @@ pub trait Font {
         screen_x: usize,
         screen_y: usize,
         character: char,
+        color: Color,
     ) -> usize;
 
     fn glyph_width(&self, character: char) -> usize;
