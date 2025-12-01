@@ -32,14 +32,19 @@ pub struct BdfFont {
 impl BdfFont {
     fn blackletter() -> Self {
         Self {
-            font: bdf2::open("./src/resources/NotJam/Blackletter/NotJamBlkltr13-13.bdf").unwrap(),
+            //TODO: Consider adding a font feature flag to exclude this data from the binary
+            font: bdf2::read(
+                &include_bytes!("../src/resources/NotJam/Blackletter/NotJamBlkltr13-13.bdf")[..],
+            )
+            .unwrap(),
             space_width: 8,
             line_height: 14,
         }
     }
     fn scrawl() -> Self {
         Self {
-            font: bdf2::open("./src/resources/NotJam/Scrawl/scrawl9-9.bdf").unwrap(),
+            font: bdf2::read(&include_bytes!("../src/resources/NotJam/Scrawl/scrawl9-9.bdf")[..])
+                .unwrap(),
             space_width: 6,
             line_height: 10,
         }
