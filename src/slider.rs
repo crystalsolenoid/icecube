@@ -43,7 +43,8 @@ impl<Message> Slider<Message> {
 
 impl<Message> Element<Message> for Slider<Message> {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
-        let percent = self.value / (self.range.end - self.range.start);
+        let percent = (self.value - self.range.start) / (self.range.end - self.range.start);
+
         for j in 0..region.h {
             for i in 0..region.w {
                 let frame_index = (((region.x + i) + (region.y + j) * WIDTH) * 4) as usize;
