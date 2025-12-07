@@ -31,11 +31,11 @@ fn view(state: &State) -> Node<Message, Layout> {
 
     let count_row = row![Node::spacer(), count, Node::spacer()];
 
+    let slider = Slider::new(0.0..10.0, state.value).on_drag(Message::Slide);
+
     let slider_row = row![
         Node::spacer(),
-        Node::new(Slider::new(0.0..10.0, dbg!(state.value)).on_drag(Message::Slide))
-            .width(50)
-            .height(10),
+        Node::new(slider).width(50).height(10),
         Node::spacer(),
     ]
     .width(Length::Shrink)

@@ -43,7 +43,7 @@ pub enum Message {
 
 struct State {
     board: Board,
-    hover_position: Option<(usize, usize)>,
+    hover_position: Option<(usize, usize)>, // Should this be in widget state?
     timer: Duration,
     paused: bool,
 }

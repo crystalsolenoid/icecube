@@ -5,6 +5,7 @@ use crate::element::Element;
 use crate::font::{self, Font, FontType};
 use crate::layout::CalculatedLayout;
 use crate::palette::{Color, BLUE_LIGHT};
+use crate::state_tree::StateNode;
 
 const WIDTH: u32 = 320; // TODO make this metadata for the frame buffer
                         //
@@ -125,7 +126,12 @@ impl<Message> Element<Message> for Text {
         self.get_max_word_px()
     }
 
-    fn get_message(&mut self, _input: &crate::Input, _region: CalculatedLayout) -> Option<Message> {
+    fn get_message(
+        &mut self,
+        _tree: &mut StateNode,
+        _input: &crate::Input,
+        _region: CalculatedLayout,
+    ) -> Option<Message> {
         None
     }
 }

@@ -1,4 +1,4 @@
-use crate::{element::Element, layout::CalculatedLayout, Input};
+use crate::{element::Element, layout::CalculatedLayout, state_tree::StateNode, Input};
 
 // TODO make generic so that user can define Message
 pub struct Button<Message> {
@@ -37,7 +37,12 @@ impl<Message> Button<Message> {
 
 impl<Message: Clone> Element<Message> for Button<Message> {
     fn draw(&self, _frame: &mut [u8], _region: CalculatedLayout) {}
-    fn get_message(&mut self, input: &Input, region: CalculatedLayout) -> Option<Message> {
+    fn get_message(
+        &mut self,
+        _tree: &mut StateNode,
+        input: &Input,
+        region: CalculatedLayout,
+    ) -> Option<Message> {
         if let Some(mouse_pos) = input.mouse_pos {
             if region.contains(mouse_pos) {
                 if input.mouse_released {

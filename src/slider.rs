@@ -3,6 +3,7 @@ use crate::{
     element::Element,
     layout::{CalculatedLayout, Layout},
     palette::{BLUE_DARK, BLUE_LIGHT},
+    state_tree::{self, StateNode},
     tree::Node,
     Input,
 };
@@ -15,6 +16,10 @@ pub struct Slider<Message> {
     range: std::ops::Range<f32>, // 0.0..1.0
                                  // granularity...
                                  // on_finish_drag...
+}
+
+pub struct State {
+    is_dragging: bool,
 }
 
 impl<Message> Slider<Message> {
@@ -53,21 +58,36 @@ impl<Message> Element<Message> for Slider<Message> {
         }
     }
 
-    fn get_message(&mut self, input: &Input, region: CalculatedLayout) -> Option<Message> {
+    fn get_message(
+        &mut self,
+        tree: &mut StateNode,
+        input: &Input,
+        region: CalculatedLayout,
+    ) -> Option<Message> {
+        let state = tree.state.downcast_mut::<State>();
+
         if let Some(mouse_pos) = input.mouse_pos {
-            if region.contains(mouse_pos) {
-                if input.mouse_down {
-                    if let Some(on_drag) = &self.on_drag {
-                        let percent = (mouse_pos.0 - region.x) as f32 / region.w as f32;
-                        let new_value =
-                            (self.range.end - self.range.start) * percent + self.range.start;
-                        self.value = new_value;
-                        return Some((on_drag)(new_value));
-                    }
+            if region.contains(mouse_pos) && input.mouse_down {
+                state.is_dragging = true;
+            }
+            if input.mouse_down && state.is_dragging {
+                if let Some(on_drag) = &self.on_drag {
+                    let percent = mouse_pos.0.saturating_sub(region.x) as f32 / region.w as f32;
+                    let new_value = ((self.range.end - self.range.start) * percent
+                        + self.range.start)
+                        .clamp(self.range.start, self.range.end);
+                    self.value = new_value;
+                    return Some((on_drag)(new_value));
                 }
+            } else {
+                state.is_dragging = false;
             }
         }
         return None;
+    }
+
+    fn get_initial_state(&self) -> state_tree::State {
+        state_tree::State::new(State { is_dragging: false })
     }
 }
 

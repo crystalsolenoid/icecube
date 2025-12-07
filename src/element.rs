@@ -1,8 +1,16 @@
-use crate::layout::{CalculatedLayout, Layout};
+use crate::{
+    layout::{CalculatedLayout, Layout},
+    state_tree::{self, StateNode},
+};
 
 pub trait Element<Message> {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout);
-    fn get_message(&mut self, input: &crate::Input, region: CalculatedLayout) -> Option<Message>;
+    fn get_message(
+        &mut self,
+        tree: &mut StateNode,
+        input: &crate::Input,
+        region: CalculatedLayout,
+    ) -> Option<Message>;
     fn layout_parameters(&self) -> Layout {
         // TODO this was for quick compiling. Do we still want it long-term?
         Layout::default()
@@ -18,5 +26,8 @@ pub trait Element<Message> {
     }
     fn min_height(&self, width: u32) -> u32 {
         self.wrap(width).unwrap_or_default()
+    }
+    fn get_initial_state(&self) -> state_tree::State {
+        state_tree::State::None
     }
 }
