@@ -2,7 +2,7 @@ use crate::{
     constants::WIDTH,
     element::Element,
     layout::{CalculatedLayout, Layout},
-    palette::{BLUE_DARK, BLUE_LIGHT},
+    palette::{Color, BLUE_DARK, BLUE_LIGHT},
     tree::Node,
     Input,
 };
@@ -12,9 +12,11 @@ pub struct Slider<Message> {
     /// Pressed on the most recent frame
     on_drag: Option<Box<dyn Fn(f32) -> Message>>,
     value: f32,
-    range: std::ops::Range<f32>, // 0.0..1.0
-                                 // granularity...
-                                 // on_finish_drag...
+    // 0.0..1.0
+    range: std::ops::Range<f32>,
+    primary_color: Color,
+    secondary_color: Color, // granularity...
+                            // on_finish_drag...
 }
 
 impl<Message> Slider<Message> {
@@ -23,6 +25,8 @@ impl<Message> Slider<Message> {
             on_drag: None,
             value,
             range,
+            primary_color: BLUE_LIGHT,
+            secondary_color: BLUE_DARK,
         }
     }
 
@@ -32,6 +36,12 @@ impl<Message> Slider<Message> {
         F: Fn(f32) -> Message + 'static,
     {
         self.on_drag = Some(Box::new(m));
+        self
+    }
+
+    pub fn set_color(mut self, primary: Color, secondary: Color) -> Self {
+        self.primary_color = primary;
+        self.secondary_color = secondary;
         self
     }
 }
@@ -44,9 +54,9 @@ impl<Message> Element<Message> for Slider<Message> {
                 let frame_index = (((region.x + i) + (region.y + j) * WIDTH) * 4) as usize;
 
                 let pixel = if (i as f32 / region.w as f32) < percent {
-                    BLUE_LIGHT
+                    self.primary_color
                 } else {
-                    BLUE_DARK
+                    self.secondary_color
                 };
                 frame[frame_index..(frame_index + 4)].copy_from_slice(&pixel);
             }
