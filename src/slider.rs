@@ -2,7 +2,7 @@ use crate::{
     constants::WIDTH,
     element::Element,
     layout::{CalculatedLayout, Layout},
-    palette::{Color, BLUE_DARK, BLUE_LIGHT},
+    palette::{Color, BLUE_DARK, BLUE_LIGHT, MAIN_DARK, MAIN_LIGHT, RED_DARK, RED_LIGHT},
     state_tree::{self, StateNode},
     tree::Node,
     Input,
@@ -15,9 +15,11 @@ pub struct Slider<Message> {
     value: f32,
     // 0.0..1.0
     range: std::ops::Range<f32>,
-    primary_color: Color,
-    secondary_color: Color, // granularity...
-                            // on_finish_drag...
+    active_bar: Color,
+    inactive_bar: Color,
+    handle: Color,
+    // granularity...
+    // on_finish_drag...
 }
 
 pub struct State {
@@ -30,8 +32,9 @@ impl<Message> Slider<Message> {
             on_drag: None,
             value,
             range,
-            primary_color: BLUE_LIGHT,
-            secondary_color: BLUE_DARK,
+            active_bar: RED_DARK,
+            inactive_bar: RED_LIGHT,
+            handle: MAIN_DARK,
         }
     }
 
@@ -44,9 +47,10 @@ impl<Message> Slider<Message> {
         self
     }
 
-    pub fn set_color(mut self, primary: Color, secondary: Color) -> Self {
-        self.primary_color = primary;
-        self.secondary_color = secondary;
+    pub fn set_color(mut self, active: Color, inactive: Color, handle: Color) -> Self {
+        self.active_bar = active;
+        self.inactive_bar = inactive;
+        self.handle = handle;
         self
     }
 }
@@ -55,18 +59,34 @@ impl<Message> Element<Message> for Slider<Message> {
     fn draw(&self, frame: &mut [u8], region: CalculatedLayout) {
         let percent = (self.value - self.range.start) / (self.range.end - self.range.start);
 
-        for j in 0..region.h {
-            for i in 0..region.w {
-                let frame_index = (((region.x + i) + (region.y + j) * WIDTH) * 4) as usize;
+        let bar_y_start = region.y + region.h / 2 - 1;
 
+        let frame_index = |i: i32, j: i32| {
+            ((((region.x as i32) + i) as u32 + (((bar_y_start as i32) + j) as u32) * WIDTH) * 4)
+                as usize
+        };
+        for j in 0..2 {
+            for i in 0..region.w {
                 let pixel = if (i as f32 / region.w as f32) < percent {
-                    self.primary_color
+                    self.active_bar
                 } else {
-                    self.secondary_color
+                    self.inactive_bar
                 };
-                frame[frame_index..(frame_index + 4)].copy_from_slice(&pixel);
+                let index = frame_index(i as i32, j as i32);
+                frame[index..(index + 4)].copy_from_slice(&pixel);
             }
         }
+
+        let handle_i = (percent * region.w as f32).round() as i32;
+        let handle_indexes = [
+            frame_index(handle_i + 1, -1),
+            frame_index(handle_i, 0),
+            frame_index(handle_i, 1),
+            frame_index(handle_i - 1, 2),
+        ];
+        handle_indexes
+            .into_iter()
+            .for_each(|i| frame[i..(i + 4)].copy_from_slice(&self.handle));
     }
 
     fn get_message(
