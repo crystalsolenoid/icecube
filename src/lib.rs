@@ -12,7 +12,7 @@ use winit::{
 };
 use winit_input_helper::WinitInputHelper;
 
-use crate::{layout::Layout, palette::Color, state_tree::StateNode, tree::Node};
+use crate::{constants::SCALE, layout::Layout, palette::Color, state_tree::StateNode, tree::Node};
 
 pub mod buffer;
 pub mod button;
@@ -66,7 +66,7 @@ where
     let mut winit_input = WinitInputHelper::new();
     let window = {
         // TODO: Consider default scaling
-        let size = LogicalSize::new(2.0 * width as f64, 2.0 * height as f64);
+        let size = LogicalSize::new(SCALE * width as f64, SCALE * height as f64);
         WindowBuilder::new()
             .with_title("Hello Pixels")
             .with_inner_size(size)
