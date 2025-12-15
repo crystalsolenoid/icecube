@@ -12,7 +12,7 @@ use winit::{
 };
 use winit_input_helper::WinitInputHelper;
 
-use crate::{layout::Layout, palette::Color, tree::Node};
+use crate::{layout::Layout, palette::Color, state_tree::StateNode, tree::Node};
 
 pub mod buffer;
 pub mod button;
@@ -25,6 +25,7 @@ pub mod mouse_area;
 pub mod palette;
 pub mod quad;
 pub mod slider;
+pub mod state_tree;
 pub mod text;
 pub mod tree;
 pub mod widget;
@@ -85,7 +86,8 @@ where
     pixels.clear_color(srgb);
 
     let mut new_root = Node::root_node(width as usize, height as usize);
-    new_root.push(view(&state));
+    new_root.push(view(&state)); // TODO need to handle layout changes with diffing (see Iced)
+    let mut state_root = StateNode::new(&new_root);
     let mut root = new_root.calculate_layout();
 
     let mut mouse_position: Result<(usize, usize), (isize, isize)> = Err((0, 0));
@@ -165,7 +167,7 @@ where
             let d = now - time_of_last_timer;
             time_of_last_timer = now;
 
-            let messages: Vec<_> = [root.get_message(&input), timer(d)]
+            let messages: Vec<_> = [root.get_message(&mut state_root, &input), timer(d)]
                 .into_iter()
                 // Filters None values
                 .flatten()

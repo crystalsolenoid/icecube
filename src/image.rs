@@ -5,6 +5,7 @@ use crate::constants::WIDTH;
 use crate::element::Element;
 use crate::layout::CalculatedLayout;
 use crate::palette::color_from_index;
+use crate::state_tree::StateNode;
 
 #[derive(Clone)]
 pub struct Image<T> {
@@ -89,7 +90,12 @@ impl<Message, T: PixelColor + Clone> Element<Message> for Image<T> {
         (self.height * self.scale_factor) as u32
     }
 
-    fn get_message(&mut self, _input: &crate::Input, _region: CalculatedLayout) -> Option<Message> {
+    fn get_message(
+        &mut self,
+        _tree: &mut StateNode,
+        _input: &crate::Input,
+        _region: CalculatedLayout,
+    ) -> Option<Message> {
         None
     }
 }

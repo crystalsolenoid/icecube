@@ -4,6 +4,7 @@ use crate::{
     element::Element,
     layout::{CalculatedLayout, Layout, LayoutDirection, Length, Padding},
     quad::{Quad, QuadStyle},
+    state_tree::StateNode,
 };
 
 pub struct Node<Message, LayoutStage> {
@@ -181,14 +182,19 @@ impl<Message> Node<Message, CalculatedLayout> {
             .for_each(|node| node.draw_recursive(frame, (0, 0)));
     }
 
-    pub fn get_message(&mut self, input: &crate::Input) -> Option<Message> {
-        let message = self.element.get_message(input, self.layout);
+    pub fn get_message(
+        &mut self,
+        state_tree: &mut StateNode,
+        input: &crate::Input,
+    ) -> Option<Message> {
+        let message = self.element.get_message(state_tree, input, self.layout);
         if message.is_some() {
             message
         } else {
             self.children
                 .iter_mut()
-                .filter_map(|child| child.get_message(input))
+                .zip(&mut state_tree.children)
+                .filter_map(|(child, child_state)| child.get_message(child_state, input))
                 .next()
         }
     }

@@ -1,6 +1,7 @@
 use crate::{
     element::Element,
     layout::{CalculatedLayout, Layout},
+    state_tree::StateNode,
     tree::Node,
     Input,
 };
@@ -64,7 +65,12 @@ impl<Message> MouseArea<Message> {
 impl<Message> Element<Message> for MouseArea<Message> {
     fn draw(&self, _frame: &mut [u8], _region: CalculatedLayout) {}
 
-    fn get_message(&mut self, input: &Input, region: CalculatedLayout) -> Option<Message> {
+    fn get_message(
+        &mut self,
+        _tree: &mut StateNode,
+        input: &Input,
+        region: CalculatedLayout,
+    ) -> Option<Message> {
         if let Some(mouse_pos) = input.mouse_pos {
             if region.contains(mouse_pos) {
                 if input.mouse_released {
