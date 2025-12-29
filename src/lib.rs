@@ -67,10 +67,11 @@ where
     let window = {
         // TODO: Consider default scaling
         let size = LogicalSize::new(SCALE * width as f64, SCALE * height as f64);
+        let min_size = LogicalSize::new(width as f64, height as f64);
         WindowBuilder::new()
             .with_title("Hello Pixels")
             .with_inner_size(size)
-            .with_min_inner_size(size)
+            .with_min_inner_size(min_size)
             .build(&event_loop)
             .unwrap()
     };
