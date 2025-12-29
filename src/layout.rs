@@ -70,7 +70,7 @@ impl<Message> Node<Message, Layout> {
                             + self.layout.padding.right,
                     )
                 }
-                LayoutDirection::Column => {
+                LayoutDirection::Column | LayoutDirection::Stack => {
                     let element_min_width = self.element.min_width();
                     // Get max child width
                     let max_child_cross_length: u32 = new_children_widths.max().unwrap_or(0);
@@ -134,7 +134,7 @@ impl<Message> Node<Message, GrownWidthLayout> {
                             + self.layout.padding.bottom,
                     )
                 }
-                LayoutDirection::Row => {
+                LayoutDirection::Row | LayoutDirection::Stack => {
                     // Get max child height
                     let max_child_cross_length: u32 = new_children_heights.max().unwrap_or(0);
                     ShrunkLength::Fixed(
@@ -166,7 +166,7 @@ impl<Message> Node<Message, ShrinkWidthLayout> {
     /// top-down
     fn grow_width_pass(self, assigned_width: GrownLength) -> Node<Message, GrownWidthLayout> {
         let new_children_widths: Vec<_> = match self.layout.direction {
-            LayoutDirection::Column => self
+            LayoutDirection::Column | LayoutDirection::Stack => self
                 .children
                 .iter()
                 .map(|c| match c.layout.width {
@@ -259,7 +259,7 @@ impl<Message> Node<Message, ShrinkHeightLayout> {
                     ShrunkLength::GrowWithMin(_) => true,
                     ShrunkLength::Fixed(_) => false,
                 },
-                LayoutDirection::Row => false,
+                LayoutDirection::Row | LayoutDirection::Stack => false,
             })
             .count()
             .try_into()
@@ -275,7 +275,7 @@ impl<Message> Node<Message, ShrinkHeightLayout> {
                             ShrunkLength::GrowWithMin(l) => l, // probably copy width logic
                             ShrunkLength::Fixed(l) => l,
                         },
-                        LayoutDirection::Row => c.layout.width,
+                        LayoutDirection::Row | LayoutDirection::Stack => c.layout.width,
                     })
                     .sum::<u32>(),
             )
@@ -293,12 +293,13 @@ impl<Message> Node<Message, ShrinkHeightLayout> {
                         m + (remaining_length / child_grow_number)
                     }
 
-                    (LayoutDirection::Row, ShrunkLength::Grow) => {
+                    (LayoutDirection::Row | LayoutDirection::Stack, ShrunkLength::Grow) => {
                         assigned_height - flow_cross_padding.1
                     }
-                    (LayoutDirection::Row, ShrunkLength::GrowWithMin(m)) => {
-                        max(m, assigned_height - flow_cross_padding.1)
-                    }
+                    (
+                        LayoutDirection::Row | LayoutDirection::Stack,
+                        ShrunkLength::GrowWithMin(m),
+                    ) => max(m, assigned_height - flow_cross_padding.1),
 
                     (_, ShrunkLength::Fixed(l)) => l,
                 };
@@ -341,6 +342,7 @@ impl<Message> Node<Message, GrownHeightLayout> {
                     LayoutDirection::Column => {
                         accumulated_position.1 += child_node.layout.height + self.layout.spacing;
                     }
+                    LayoutDirection::Stack => (),
                 };
                 Some(child_node.position_pass(start_position))
             })

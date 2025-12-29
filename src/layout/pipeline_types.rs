@@ -19,6 +19,7 @@ pub enum LayoutDirection {
     Column,
     #[default]
     Row,
+    Stack,
 }
 
 pub type Layout = LayoutTemplate<Length, Length>;
@@ -33,7 +34,7 @@ impl<W, H> LayoutTemplate<W, H> {
         let height = self.padding.top + self.padding.bottom;
         match self.direction {
             LayoutDirection::Column => FlowCross(height, width),
-            LayoutDirection::Row => FlowCross(width, height),
+            LayoutDirection::Row | LayoutDirection::Stack => FlowCross(width, height),
         }
     }
 }

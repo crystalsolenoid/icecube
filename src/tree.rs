@@ -110,6 +110,16 @@ impl<Message> Node<Message, Layout> {
         }
     }
 
+    pub fn stack(self) -> Self {
+        Self {
+            layout: Layout {
+                direction: LayoutDirection::Stack,
+                ..self.layout
+            },
+            ..self
+        }
+    }
+
     pub fn row(self) -> Self {
         Self {
             layout: Layout {

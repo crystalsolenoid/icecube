@@ -4,6 +4,18 @@ use crate::{
     tree::Node,
 };
 
+pub fn create_stack<Message>(elements: Vec<Node<Message, Layout>>) -> Node<Message, Layout> {
+    let mut stack = Node::new(Quad::new())
+        .stack()
+        .width(Length::Shrink) // TODO shrink?
+        .height(Length::Shrink);
+
+    for element in elements.into_iter() {
+        stack.push(element);
+    }
+    stack
+}
+
 pub fn create_row<Message>(elements: Vec<Node<Message, Layout>>) -> Node<Message, Layout> {
     let mut row = Node::new(Quad::new())
         .row()
@@ -28,6 +40,15 @@ pub fn create_column<Message>(elements: Vec<Node<Message, Layout>>) -> Node<Mess
     col
 }
 
+#[macro_export]
+macro_rules! stack {
+    () => (
+        $crate::widget::create_stack(std::vec::Vec::new())
+    );
+    ($($x:expr),+ $(,)?) => (
+        $crate::widget::create_stack(vec![$($x),+])
+    );
+}
 #[macro_export]
 macro_rules! row {
     () => (
