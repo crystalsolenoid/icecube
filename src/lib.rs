@@ -34,6 +34,7 @@ pub mod widget;
 #[derive(Debug, Clone)]
 pub struct Input {
     pub mouse_released: bool,
+    pub mouse_right_released: bool,
     pub mouse_down: bool,
     pub mouse_pos: Option<(u32, u32)>,
     pub prev_mouse_pos: Option<(u32, u32)>,
@@ -158,6 +159,7 @@ where
 
             let input = Input {
                 mouse_released: winit_input.mouse_released(0),
+                mouse_right_released: winit_input.mouse_released(1),
                 mouse_pos: input_mouse_pos,
                 prev_mouse_pos,
                 mouse_down: winit_input.mouse_held(0),

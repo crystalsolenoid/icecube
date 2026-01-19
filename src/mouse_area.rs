@@ -10,6 +10,8 @@ use crate::{
 pub struct MouseArea<Message> {
     /// Pressed on the most recent frame
     on_press: Option<Box<dyn Fn((usize, usize)) -> Message>>,
+    // TODO: generalize buttons?
+    on_right_press: Option<Box<dyn Fn((usize, usize)) -> Message>>,
     whenever_down: Option<Box<dyn Fn((usize, usize)) -> Message>>,
     on_hover: Option<Box<dyn Fn((usize, usize)) -> Message>>,
     on_exit: Option<Box<dyn Fn() -> Message>>,
@@ -19,6 +21,7 @@ impl<Message> MouseArea<Message> {
     pub fn new() -> Self {
         Self {
             on_press: None,
+            on_right_press: None,
             on_hover: None,
             on_exit: None,
             whenever_down: None,
@@ -31,6 +34,14 @@ impl<Message> MouseArea<Message> {
         F: Fn((usize, usize)) -> Message + 'static,
     {
         self.on_press = Some(Box::new(m));
+        self
+    }
+
+    pub fn on_right_press<F>(mut self, m: F) -> Self
+    where
+        F: Fn((usize, usize)) -> Message + 'static,
+    {
+        self.on_right_press = Some(Box::new(m));
         self
     }
 
@@ -76,6 +87,14 @@ impl<Message> Element<Message> for MouseArea<Message> {
                 if input.mouse_released {
                     if let Some(on_press) = &self.on_press {
                         return Some((on_press)((
+                            (mouse_pos.0 - region.x) as usize,
+                            (mouse_pos.1 - region.y) as usize,
+                        )));
+                    }
+                }
+                if input.mouse_right_released {
+                    if let Some(on_right_press) = &self.on_right_press {
+                        return Some((on_right_press)((
                             (mouse_pos.0 - region.x) as usize,
                             (mouse_pos.1 - region.y) as usize,
                         )));
