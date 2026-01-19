@@ -25,7 +25,7 @@ fn update(m: Message, state: &mut State) {
     }
 }
 
-fn view(state: &State) -> Node<Message, Layout> {
+fn view<'a>(state: &State) -> Node<'a, Message, Layout> {
     let font = &font::BLACKLETTER;
 
     let mut count =
@@ -53,7 +53,7 @@ fn view(state: &State) -> Node<Message, Layout> {
 }
 
 //TODO: Make an alias for LazyLock<FontType> and for Node
-fn make_button(label: String, action: Message) -> Node<Message, Layout> {
+fn make_button<'a>(label: String, action: Message) -> Node<'a, Message, Layout> {
     let button_text = Node::new(Text::new(label).with_font(&font::BLACKLETTER));
     let mut button_quad = Node::new(
         Quad::new()

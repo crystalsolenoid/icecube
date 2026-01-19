@@ -46,7 +46,7 @@ impl State {}
 
 fn update(_m: Message, _state: &mut State) {}
 
-fn view(state: &State) -> Node<Message, Layout> {
+fn view<'a>(state: &State) -> Node<'a, Message, Layout> {
     let image = Node::new(Image::new(state.data.clone(), WIDTH, HEIGHT).scale_factor(8))
         .height(Length::Shrink)
         .width(Length::Shrink);

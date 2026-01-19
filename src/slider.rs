@@ -122,8 +122,8 @@ impl<Message> Element<Message> for Slider<Message> {
     }
 }
 
-impl<Message: 'static> Into<Node<Message, Layout>> for Slider<Message> {
-    fn into(self) -> Node<Message, Layout> {
+impl<'a, Message: 'static> Into<Node<'a, Message, Layout>> for Slider<Message> {
+    fn into(self) -> Node<'a, Message, Layout> {
         Node::new(self)
     }
 }

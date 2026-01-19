@@ -48,7 +48,7 @@ fn update(m: Message, state: &mut State) {
     }
 }
 
-fn view(state: &State) -> Node<Message, Layout> {
+fn view<'a>(state: &State) -> Node<'a, Message, Layout> {
     let font = &font::BLACKLETTER;
 
     let image = Node::new(Image::new(imdata(), IMWIDTH, IMHEIGHT).scale_factor(8))

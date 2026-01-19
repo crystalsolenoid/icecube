@@ -10,7 +10,7 @@ use icecube::tree::Node;
 use icecube::{col, font, row};
 
 // TODO can we specify a generic default for Node for a nicer API?
-fn build_ui_tree(state: &State) -> Node<Message, Layout> {
+fn build_ui_tree<'a>(state: &State) -> Node<'a, Message, Layout> {
     /*
      * Intended layout tree:
      *
@@ -170,7 +170,7 @@ fn update(m: Message, state: &mut State) {
 }
 
 // TODO this will be defined by the person writing the UI, not by the icecube library
-fn view(state: &State) -> Node<Message, Layout> {
+fn view<'a>(state: &State) -> Node<'a, Message, Layout> {
     build_ui_tree(state)
 }
 

@@ -40,7 +40,7 @@ pub struct Input {
     pub prev_mouse_pos: Option<(u32, u32)>,
 }
 
-pub fn run<State, Message, Update, View, Timer>(
+pub fn run<'a, State, Message, Update, View, Timer>(
     initial_state: State,
     update: Update,
     view: View,
@@ -52,7 +52,7 @@ pub fn run<State, Message, Update, View, Timer>(
 //TODO: make a custom error type
 where
     Update: Fn(Message, &mut State),
-    View: Fn(&State) -> Node<Message, Layout>,
+    View: Fn(&State) -> Node<'a, Message, Layout>,
     Timer: Fn(Duration) -> Option<Message>,
 {
     env_logger::init();

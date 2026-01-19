@@ -2,7 +2,6 @@ use icecube::button::Button;
 use icecube::image::Image;
 use icecube::layout::{Layout, Length};
 use icecube::palette::MAIN_LIGHT;
-use icecube::quad::Quad;
 use icecube::tree::Node;
 use icecube::{col, row};
 
@@ -43,7 +42,7 @@ fn update(m: Message, state: &mut State) {
     }
 }
 
-fn view(state: &State) -> Node<Message, Layout> {
+fn view<'a>(state: &State) -> Node<'a, Message, Layout> {
     let image = Node::new(Image::new(state.data.clone(), 3, 4).scale_factor(8))
         .height(Length::Shrink)
         .width(Length::Shrink);

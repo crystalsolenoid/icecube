@@ -223,7 +223,7 @@ fn update(m: Message, state: &mut State) {
     }
 }
 
-fn view(state: &State) -> Node<Message, Layout> {
+fn view<'a>(state: &State) -> Node<'a, Message, Layout> {
     let step_button_text = Node::new(Text::new("Step".into()).with_font(&font::BLACKLETTER));
     let mut step_button = Node::new(Button::new().on_press(Message::Step))
         .height(Length::Shrink)
