@@ -17,6 +17,8 @@ pub struct Image<T> {
     pub height: usize,
 }
 
+// TODO add mouse events that take scale_factor into account
+
 impl<T> Image<T> {
     pub fn new(data: Vec<T>, width: usize, height: usize) -> Self {
         Self {
