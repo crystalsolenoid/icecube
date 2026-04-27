@@ -181,8 +181,6 @@ where
             .flatten()
             .collect();
 
-            dbg!(&messages);
-
             let update_needed = !messages.is_empty();
 
             messages
