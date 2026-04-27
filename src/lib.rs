@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
 use error_iter::ErrorIter as _;
@@ -51,9 +52,10 @@ pub fn run<'a, State, Message, Update, View, Timer>(
 ) -> Result<(), Error>
 //TODO: make a custom error type
 where
+    Message: Debug,
     Update: Fn(Message, &mut State),
     View: Fn(&State) -> Node<'a, Message, Layout>,
-    Timer: Fn(Duration) -> Option<Message>,
+    Timer: Fn((&mut State, Duration)) -> Option<Message>,
 {
     env_logger::init();
 
@@ -170,11 +172,16 @@ where
             let d = now - time_of_last_timer;
             time_of_last_timer = now;
 
-            let messages: Vec<_> = [root.get_message(&mut state_root, &input), timer(d)]
-                .into_iter()
-                // Filters None values
-                .flatten()
-                .collect();
+            let messages: Vec<_> = [
+                root.get_message(&mut state_root, &input),
+                timer((&mut state, d)),
+            ]
+            .into_iter()
+            // Filters None values
+            .flatten()
+            .collect();
+
+            dbg!(&messages);
 
             let update_needed = !messages.is_empty();
 

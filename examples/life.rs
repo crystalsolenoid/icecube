@@ -37,7 +37,7 @@ pub enum Message {
     BoardClick((usize, usize)),
     BoardHover((usize, usize)),
     BoardExit,
-    TimeElapsed(Duration),
+    FrameElapsed(Duration),
     Pause,
 }
 
@@ -212,7 +212,7 @@ fn update(m: Message, state: &mut State) {
             state.hover_position = Some((pos.0 / SCALE_FACTOR, pos.1 / SCALE_FACTOR));
         }
         Message::BoardExit => state.hover_position = None,
-        Message::TimeElapsed(d) => {
+        Message::FrameElapsed(d) => {
             state.timer += d;
             if state.paused && state.timer > Duration::from_millis(250) {
                 state.board.step();
@@ -371,7 +371,22 @@ fn view<'a>(state: &State) -> Node<'a, Message, Layout> {
 fn main() -> Result<(), pixels::Error> {
     let initial_state = State::default();
 
-    icecube::run(initial_state, update, view, 320, 240, MAIN_LIGHT, |d| {
-        Some(Message::TimeElapsed(d))
-    })
+    icecube::run(
+        initial_state,
+        update,
+        view,
+        320,
+        240,
+        MAIN_LIGHT,
+        |(state, d)| {
+            state.timer += d;
+            if state.paused && state.timer > Duration::from_millis(250) {
+                let total_time = state.timer;
+                state.timer = Duration::ZERO;
+                Some(Message::FrameElapsed(total_time))
+            } else {
+                None
+            }
+        },
+    )
 }
